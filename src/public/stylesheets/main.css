@@ -20,15 +20,21 @@ header {
 }
 
 main {
-  border: 1px solid blue;
+  background-color: black;
+  /* border: 1px solid blue; */
+  display: flex;
+  justify-content: center;
+  align-items: center;
   position: fixed;
   top: 150px;
   width: 100vw;
 }
 
 canvas {
-  border: 1px solid black;
-  left: 20px;
-  position: relative;
-  top: 20px;
+  /* background-color: cyan; */
+  /* background-size: 100%; */
+  /* border: 1px solid black; */
+  /* left: 20px; */
+  /* position: relative; */
+  /* top: 20px; */
 }
