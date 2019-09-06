@@ -1,11 +1,16 @@
 class Node {
-  constructor(vertex, weight) {
-    this.vertex = vertex;
+  constructor(key, weight, vertexList) {
+    this.key = key;
     this.weight = weight;
+    this.vertex = vertexList[key];
     this.floorImg = "/images/floor2.png";
     const image = new Image();
     image.onload = () => {
-      vertex.ctx.drawImage(image, vertex.coords.x, vertex.coords.y);
+      this.vertex.ctx.drawImage(
+        image,
+        this.vertex.coords.x,
+        this.vertex.coords.y
+      );
     };
     image.src = this.floorImg;
   }
@@ -16,8 +21,8 @@ class PriorityQueue {
     this.values = [];
   }
 
-  enqueue(vertex, weight) {
-    const newNode = new Node(vertex, weight);
+  enqueue(vertex, weight, vertexList) {
+    const newNode = new Node(vertex, weight, vertexList);
     this.values.push(newNode);
     this.bubbleUp();
   }
@@ -80,102 +85,95 @@ class PriorityQueue {
 
 class WeightedGraph {
   constructor(start) {
-    this.size = [];
+    this.vertexList = [];
     this.adjacencyList = {};
     this.newFloorImg = "/images/floor.png";
+    this.start = start;
+    this.key = 0;
+  }
+
+  resetGraph() {
     this.pq = new PriorityQueue();
     this.distances = {};
     this.previous = {};
     this.path = [];
     this.smallest = undefined;
-    this.start = start;
   }
 
   addVertex(vertex) {
-    const key = vertex.key;
-    if (!this.adjacencyList[key]) {
-      this.adjacencyList[key] = vertex;
-      this.adjacencyList[key]["edge"] = [];
-      this.size.push(vertex);
+    if (!this.adjacencyList[this.key]) {
+      this.adjacencyList[this.key] = [];
+      this.vertexList.push(vertex);
     }
+    this.key++;
   }
 
   addEdge(k1, k2, weight) {
-    this.adjacencyList[k1]["edge"].push({
-      node: this.adjacencyList[k2],
+    this.adjacencyList[k1].push({
+      node: k2,
       weight,
     });
-    this.adjacencyList[k2]["edge"].push({
-      node: this.adjacencyList[k1],
+    this.adjacencyList[k2].push({
+      node: k1,
       weight,
     });
   }
 
   drawGraph() {
-    let vertex;
+    this.resetGraph();
     Object.keys(this.adjacencyList).forEach((key) => {
-      vertex = this.adjacencyList[key];
       if (
-        this.adjacencyList[key]["coords"].x === this.start.x &&
-        this.adjacencyList[key]["coords"].y === this.start.y
+        this.vertexList[key]["coords"].x === this.start.x &&
+        this.vertexList[key]["coords"].y === this.start.y
       ) {
-        this.distances[vertex.key] = 0;
-        this.pq.enqueue(vertex, 0);
+        this.distances[key] = 0;
+        this.pq.enqueue(key, 0, this.vertexList);
       } else {
-        this.distances[vertex.key] = Infinity;
-        this.pq.enqueue(vertex, Infinity);
+        this.distances[key] = Infinity;
+        this.pq.enqueue(key, Infinity, this.vertexList);
       }
-      this.previous[vertex.key] = null;
+      this.previous[key] = null;
     });
   }
 
   dijkstra(finish) {
     while (this.pq.values.length) {
-      this.smallest = this.pq.dequeue();
+      const currentNode = this.pq.dequeue();
+      this.smallest = currentNode.key;
       if (
-        this.smallest.vertex.coords.x === finish.x &&
-        this.smallest.vertex.coords.y === finish.y
+        this.vertexList[this.smallest].coords.x === finish.x &&
+        this.vertexList[this.smallest].coords.y === finish.y
       ) {
-        while (this.previous[this.smallest.vertex.key]) {
-          this.smallest.floorImg = this.newFloorImg;
-          this.path.push(this.smallest.vertex.coords);
-          this.smallest.vertex = this.previous[this.smallest.vertex.key];
+        while (this.previous[this.smallest]) {
+          // currentNode.floorImg = this.newFloorImg;
+          this.path.push(Number(this.smallest));
+          this.smallest = this.previous[this.smallest];
         }
         break;
       }
-      if (
-        this.smallest.vertex ||
-        this.distances[this.smallest.vertex.key] !== Infinity
-      ) {
-        for (
-          let i = 0;
-          i < this.adjacencyList[this.smallest.vertex.key]["edge"].length;
-          i++
-        ) {
-          const nextNode = this.adjacencyList[this.smallest.vertex.key]["edge"][
-            i
-          ];
-          const candidate =
-            this.distances[this.smallest.vertex.key] + nextNode.weight;
+      if (this.smallest || this.distances[this.smallest] !== Infinity) {
+        for (let i = 0; i < this.adjacencyList[this.smallest].length; i++) {
+          const nextNode = this.adjacencyList[this.smallest][i];
+          const candidate = this.distances[this.smallest] + nextNode.weight;
           const nextNeighbor = nextNode.node;
-          if (candidate < this.distances[nextNode.node.key]) {
-            this.distances[nextNeighbor.key] = candidate;
-            this.previous[nextNeighbor.key] = this.smallest.vertex;
-            this.pq.enqueue(nextNeighbor, candidate);
+          if (candidate < this.distances[nextNode.node]) {
+            this.distances[nextNeighbor] = candidate;
+            this.previous[nextNeighbor] = this.smallest;
+            this.pq.enqueue(nextNeighbor, candidate, this.vertexList);
           }
         }
       }
     }
-    this.smallest.floorImg = this.newFloorImg;
-    return this.path.concat(this.smallest.vertex.coords).reverse();
+    // this.smallest.floorImg = this.newFloorImg;
+    return this.path.concat(Number(this.smallest)).reverse();
   }
 }
 
 class Board {
-  constructor() {
+  constructor(start, exit) {
     this.setDimensions();
-    this.start = {x: 0, y: 0};
-    this.exit = {x: 90, y: 90};
+    this.start = start;
+    this.exit = exit;
     this.g = new WeightedGraph(this.start);
     this.path;
   }
@@ -218,81 +216,84 @@ class Board {
 
   drawTiles() {
     const g = this.g;
-    let key = 0;
     let vertex;
+    let key = 0;
     for (let i = 0; i < this.mapHeight; i++) {
       for (let j = 0; j < this.mapWidth; j++) {
+        vertex = {};
         vertex = {
-          key,
           ctx: this.ctx,
           coords: {x: j * this.tileWidth, y: i * this.tileHeight},
         };
         g.addVertex(vertex);
-        key++;
       }
     }
-    key = 0;
     for (let i = 0; i < this.mapHeight; i++) {
       for (let j = 0; j < this.mapWidth; j++) {
-        this.addConnections(g, key, j * this.tileWidth, i * this.tileHeight, 1);
+        this.addConnections(g, key, 1);
         key++;
       }
     }
     g.drawGraph();
   }
 
-  addConnections(g, key, xValue, yValue, w) {
-    const ky = this.mapHeight;
-    const x = xValue;
-    const y = yValue;
+  addConnections(g, key, w) {
+    // nodes are added from top to bottom, left to right
     const k = key;
-    const xn = (this.mapWidth - 1) * this.tileWidth;
-    const yn = (this.mapHeight - 1) * this.tileHeight;
-    if (x === 0 && y === 0) {
+    const kx = this.mapWidth;
+    const rightTopK = kx - 1;
+    const lastK = this.mapWidth * this.mapHeight - 1;
+    const leftBottomK = this.mapWidth * this.mapHeight - this.mapWidth;
+    if (k === 0) {
       // top left
-      g.addEdge(k, k + 1, w);
-      g.addEdge(k, k + ky, w);
-    } else if (x === xn && y === 0) {
+      g.addEdge(k, k + 1, w); // connect right
+      g.addEdge(k, k + kx, w); // connect bottom
+    } else if (k === rightTopK) {
       // top right
-      g.addEdge(k, k + ky, w);
-      g.addEdge(k, k - 1, w);
-    } else if (x === xn && y === yn) {
+      g.addEdge(k, k + kx, w); // connect bottom
+      g.addEdge(k, k - 1, w); // connect left
+    } else if (k === lastK) {
       // bottom right
-      g.addEdge(k, k - ky, w);
-      g.addEdge(k, k - 1, w);
-    } else if (x === 0 && y === yn) {
+      g.addEdge(k, k - kx, w); // connect top
+      g.addEdge(k, k - 1, w); // connect left
+    } else if (k === leftBottomK) {
       // bottom left
-      g.addEdge(k, k - ky, w);
-      g.addEdge(k, k + 1, w);
-    } else if (y === 0 && x !== 0 && x !== xn) {
+      g.addEdge(k, k - kx, w); // connect top
+      g.addEdge(k, k + 1, w); // connect right
+    } else if (k > 0 && k < rightTopK) {
       // top
-      g.addEdge(k, k + 1, w);
-      g.addEdge(k, k + ky, w);
-      g.addEdge(k, k - 1, w);
-    } else if (x === xn && y !== 0 && y !== yn) {
+      g.addEdge(k, k + 1, w); // connect right
+      g.addEdge(k, k + kx, w); // connect bottom
+      g.addEdge(k, k - 1, w); // connect left
+    } else if (
+      k !== rightTopK &&
+      k !== lastK &&
+      (k + 1) % this.mapWidth === 0
+    ) {
       // right
-      g.addEdge(k, k - ky, w);
-      g.addEdge(k, k + ky, w);
-      g.addEdge(k, k - 1, w);
-    } else if (y === yn && x !== 0 && x !== xn) {
+      g.addEdge(k, k - kx, w); // connect top
+      g.addEdge(k, k + kx, w); // connect bottom
+      g.addEdge(k, k - 1, w); // connect left
+    } else if (k > leftBottomK && k < lastK) {
       // bottom
-      g.addEdge(k, k - ky, w);
-      g.addEdge(k, k + 1, w);
-      g.addEdge(k, k - 1, w);
-    } else if (x === 0 && y !== 0 && y !== yn) {
+      g.addEdge(k, k - kx, w); // connect top
+      g.addEdge(k, k + 1, w); // connect right
+      g.addEdge(k, k - 1, w); // connect left
+    } else if (k !== 0 && k !== leftBottomK && k % this.mapWidth === 0) {
       // left
-      g.addEdge(k, k - ky, w);
-      g.addEdge(k, k + 1, w);
-      g.addEdge(k, k + ky, w);
+      g.addEdge(k, k - kx, w); // connect top
+      g.addEdge(k, k + 1, w); // connect right
+      g.addEdge(k, k + kx, w); // connect bottom
     } else {
-      g.addEdge(k, k - ky, w);
-      g.addEdge(k, k + 1, w);
-      g.addEdge(k, k + ky, w);
-      g.addEdge(k, k - 1, w);
+      g.addEdge(k, k - kx, w); // connect top
+      g.addEdge(k, k + 1, w); // connect right
+      g.addEdge(k, k + kx, w); // connect bottom
+      g.addEdge(k, k - 1, w); // connect left
     }
   }
 
   findPath() {
+    this.path = null;
     const pathSlots = ["dijkstra"];
     const num = Math.floor(Math.random() * pathSlots.length);
     switch (pathSlots[num]) {
@@ -307,30 +308,26 @@ class Board {
     return this.path;
   }
 
-  drawPlayer() {
-    this.redraw("player");
-  }
-
-  drawExit() {
-    this.redraw("exit");
-  }
-
   draw() {
-    Promise.all([
-      this.drawTiles(),
-      this.drawExit(),
-      this.drawPlayer(),
-    ]);
+    this.drawTiles();
+    this.redraw("exit");
+    this.redraw("player");
   }
 
   drawPath() {
     const image = new Image();
     image.onload = () => {
       for (let i = 1; i < this.path.length - 1; i++) {
-        this.ctx.drawImage(image, this.path[i].x, this.path[i].y);
+        this.ctx.drawImage(
+          image,
+          this.g.vertexList[this.path[i]].coords.x,
+          this.g.vertexList[this.path[i]].coords.y
+        );
       }
     };
     image.src = "/images/path.png";
+    this.redraw("exit");
+    this.redraw("player");
   }
 
   redraw(type) {
@@ -360,9 +357,14 @@ class Board {
   }
 }
 
-const b = new Board();
+const start = {x: 0, y: 0};
+const exit = {x: 90, y: 180};
+
+const b = new Board(start, exit);
 b.draw();
 window.addEventListener("resize", () => {
+  const b = new Board(start, exit);
+  b.draw();
   b.setDimensions();
   b.draw();
 });
