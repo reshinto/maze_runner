@@ -171,11 +171,14 @@ class WeightedGraph {
 
 class Board {
   constructor(start, exit) {
-    this.setDimensions();
-    this.start = start;
-    this.exit = exit;
-    this.g = new WeightedGraph(this.start);
-    this.path;
+    this.reset(start, exit);
+  }
+
+  randomPosition() {
+    return {
+      x: Math.floor(Math.random() * this.mapWidth) * 30,
+      y: Math.floor(Math.random() * this.mapHeight) * 30,
+    };
   }
 
   setMainHeight() {
@@ -200,10 +203,19 @@ class Board {
     this.ctx = this.c.getContext("2d");
   }
 
-  setDimensions() {
+  reset(start, exit) {
     this.setMainHeight();
     this.setMapDimensions();
     this.setCanvasDimensions();
+    this.setSettings(start, exit);
+    this.draw();
+  }
+
+  setSettings(start, exit) {
+    this.start = start === undefined ? this.randomPosition() : start;
+    this.exit = exit === undefined ? this.randomPosition() : exit;
+    this.g = new WeightedGraph(this.start);
+    this.path = null;
   }
 
   getHeaderHeight() {
@@ -357,16 +369,14 @@ class Board {
   }
 }
 
-const start = {x: 0, y: 0};
-const exit = {x: 90, y: 180};
+// const start = {x: 0, y: 0};
+// const exit = {x: 90, y: 180};
+let start;
+let exit;
 
 const b = new Board(start, exit);
-b.draw();
 window.addEventListener("resize", () => {
-  const b = new Board(start, exit);
-  b.draw();
-  b.setDimensions();
-  b.draw();
+  b.reset();
 });
 const gacha = document.getElementById("gacha");
 gacha.addEventListener("click", () => {
