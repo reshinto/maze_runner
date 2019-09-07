@@ -1,10 +1,9 @@
 class Node {
-  constructor(key, weight, vertexList) {
+  constructor(key, weight, vertex) {
+    const image = new Image();
     this.key = key;
     this.weight = weight;
-    this.vertex = vertexList[key];
-    this.floorImg = "/images/floor2.png";
-    const image = new Image();
+    this.vertex = vertex;
     image.onload = () => {
       this.vertex.ctx.drawImage(
         image,
@@ -12,7 +11,19 @@ class Node {
         this.vertex.coords.y
       );
     };
-    image.src = this.floorImg;
+    image.src = "/images/floor2.png";
+
+    if (this.vertex.wall >= 2) {
+      const image2 = new Image();
+      image2.onload = () => {
+        this.vertex.ctx.drawImage(
+          image2,
+          this.vertex.coords.x,
+          this.vertex.coords.y
+        );
+      };
+      image2.src = !vertex.useWeights ? "/images/wall.png" : "/images/bomb.png";
+    }
   }
 }
 
@@ -87,9 +98,9 @@ class WeightedGraph {
   constructor(start) {
     this.vertexList = [];
     this.adjacencyList = {};
-    this.newFloorImg = "/images/floor.png";
     this.start = start;
     this.key = 0;
+    this.searched = false;
   }
 
   resetGraph() {
@@ -101,14 +112,38 @@ class WeightedGraph {
   }
 
   addVertex(vertex) {
-    if (!this.adjacencyList[this.key]) {
-      this.adjacencyList[this.key] = [];
-      this.vertexList.push(vertex);
-    }
+    const key = String(this.key);
+    this.adjacencyList[key] = [];
+    this.vertexList.push(vertex);
     this.key++;
   }
 
-  addEdge(k1, k2, weight) {
+  addEdge(k1, k2, weight, useWeights) {
+    const key1 = String(k1);
+    const key2 = String(k2);
+    if (!useWeights) {
+      this._addWallEdge(key1, key2, weight);
+    } else {
+      this._addWeightEdge(key1, key2, weight);
+    }
+  }
+
+  _addWallEdge(k1, k2, weight) {
+    if (this.vertexList[k1].wall === 1 && this.vertexList[k2].wall === 1) {
+      this._addEdge(k1, k2, weight);
+    }
+  }
+
+  _addWeightEdge(k1, k2, weight) {
+    if (this.vertexList[k1].wall > this.vertexList[k2].wall) {
+      weight = this.vertexList[k1].wall;
+    } else if (this.vertexList[k2].wall > this.vertexList[k1].wall) {
+      weight = this.vertexList[k2].wall;
+    }
+    this._addEdge(k1, k2, weight);
+  }
+
+  _addEdge(k1, k2, weight) {
     this.adjacencyList[k1].push({
       node: k2,
       weight,
@@ -127,16 +162,17 @@ class WeightedGraph {
         this.vertexList[key]["coords"].y === this.start.y
       ) {
         this.distances[key] = 0;
-        this.pq.enqueue(key, 0, this.vertexList);
+        this.pq.enqueue(key, 0, this.vertexList[key]);
       } else {
         this.distances[key] = Infinity;
-        this.pq.enqueue(key, Infinity, this.vertexList);
+        this.pq.enqueue(key, Infinity, this.vertexList[key]);
       }
       this.previous[key] = null;
     });
   }
 
   dijkstra(finish) {
+    if (this.searched) this.drawGraph();
     while (this.pq.values.length) {
       const currentNode = this.pq.dequeue();
       this.smallest = currentNode.key;
@@ -145,8 +181,7 @@ class WeightedGraph {
         this.vertexList[this.smallest].coords.y === finish.y
       ) {
         while (this.previous[this.smallest]) {
-          // currentNode.floorImg = this.newFloorImg;
-          this.path.push(Number(this.smallest));
+          this.path.push(this.smallest);
           this.smallest = this.previous[this.smallest];
         }
         break;
@@ -159,13 +194,17 @@ class WeightedGraph {
           if (candidate < this.distances[nextNode.node]) {
             this.distances[nextNeighbor] = candidate;
             this.previous[nextNeighbor] = this.smallest;
-            this.pq.enqueue(nextNeighbor, candidate, this.vertexList);
+            this.pq.enqueue(
+              nextNeighbor,
+              candidate,
+              this.vertexList[this.smallest]
+            );
           }
         }
       }
     }
-    // this.smallest.floorImg = this.newFloorImg;
-    return this.path.concat(Number(this.smallest)).reverse();
+    this.searched = true;
+    return this.path.concat(this.smallest).reverse();
   }
 }
 
@@ -214,6 +253,9 @@ class Board {
   setSettings(start, exit) {
     this.start = start === undefined ? this.randomPosition() : start;
     this.exit = exit === undefined ? this.randomPosition() : exit;
+    while (this.exit.x === this.start.x && this.exit.y === this.start.y) {
+      this.exit = this.randomPosition();
+    }
     this.g = new WeightedGraph(this.start);
     this.path = null;
   }
@@ -226,30 +268,82 @@ class Board {
     return headerStr.slice(0, headerStr.length - 2);
   }
 
-  drawTiles() {
-    const g = this.g;
+  drawMaze() {
+    // this.simpleMazeGenerator();
+    this.weightMazeGenerator();
+  }
+
+  simpleMazeGenerator() {
+    let coords;
     let vertex;
-    let key = 0;
+    this.useWeights = false;
+    this.world = [[]];
     for (let i = 0; i < this.mapHeight; i++) {
+      this.world[i] = [];
       for (let j = 0; j < this.mapWidth; j++) {
-        vertex = {};
+        coords = {x: j * this.tileWidth, y: i * this.tileHeight};
         vertex = {
           ctx: this.ctx,
-          coords: {x: j * this.tileWidth, y: i * this.tileHeight},
+          coords,
+          start: this.start,
+          exit: this.exit,
+          wall: this.randomWall(i, j, coords),
+          useWeights: this.useWeights,
         };
-        g.addVertex(vertex);
+        this.world[i][j] = vertex.wall;
+        this.g.addVertex(vertex);
       }
     }
+    this.addConnections();
+  }
+
+  weightMazeGenerator() {
+    let coords;
+    let vertex;
+    this.useWeights = true;
+    this.world = [[]];
     for (let i = 0; i < this.mapHeight; i++) {
+      this.world[i] = [];
       for (let j = 0; j < this.mapWidth; j++) {
-        this.addConnections(g, key, 1);
+        coords = {x: j * this.tileWidth, y: i * this.tileHeight};
+        vertex = {
+          ctx: this.ctx,
+          coords,
+          start: this.start,
+          exit: this.exit,
+          wall: this.randomWall(i, j, coords),
+          useWeights: this.useWeights,
+        };
+        this.world[i][j] = vertex.wall;
+        this.g.addVertex(vertex);
+      }
+    }
+    this.addConnections();
+  }
+
+  randomWall(i, j, coords) {
+    let wall;
+    wall = Math.random() > 0.75 ? 5 : 1;
+    if (coords.x === this.start.x && coords.y === this.start.y) wall = 1;
+    if (coords.x === this.exit.x && coords.y === this.exit.y) wall = 1;
+    return wall;
+  }
+
+  addConnections() {
+    let weight;
+    let key = 0;
+    for (let i = 0; i < this.mapHeight; i++) {
+      this._addConnections(this.g, i, weight, this.useWeights);
+      for (let j = 0; j < this.mapWidth; j++) {
+        weight = this.world[i][j];
+        this._addConnections(this.g, key, weight, this.useWeights);
         key++;
       }
     }
-    g.drawGraph();
+    this.g.drawGraph();
   }
 
-  addConnections(g, key, w) {
+  _addConnections(g, key, w, useW) {
     // nodes are added from top to bottom, left to right
     const k = key;
     const kx = this.mapWidth;
@@ -258,49 +352,49 @@ class Board {
     const leftBottomK = this.mapWidth * this.mapHeight - this.mapWidth;
     if (k === 0) {
       // top left
-      g.addEdge(k, k + 1, w); // connect right
-      g.addEdge(k, k + kx, w); // connect bottom
+      g.addEdge(k, k + 1, w, useW); // connect right
+      g.addEdge(k, k + kx, w, useW); // connect bottom
     } else if (k === rightTopK) {
       // top right
-      g.addEdge(k, k + kx, w); // connect bottom
-      g.addEdge(k, k - 1, w); // connect left
+      g.addEdge(k, k + kx, w, useW); // connect bottom
+      g.addEdge(k, k - 1, w, useW); // connect left
     } else if (k === lastK) {
       // bottom right
-      g.addEdge(k, k - kx, w); // connect top
-      g.addEdge(k, k - 1, w); // connect left
+      g.addEdge(k, k - kx, w, useW); // connect top
+      g.addEdge(k, k - 1, w, useW); // connect left
     } else if (k === leftBottomK) {
       // bottom left
-      g.addEdge(k, k - kx, w); // connect top
-      g.addEdge(k, k + 1, w); // connect right
+      g.addEdge(k, k - kx, w, useW); // connect top
+      g.addEdge(k, k + 1, w, useW); // connect right
     } else if (k > 0 && k < rightTopK) {
       // top
-      g.addEdge(k, k + 1, w); // connect right
-      g.addEdge(k, k + kx, w); // connect bottom
-      g.addEdge(k, k - 1, w); // connect left
+      g.addEdge(k, k + 1, w, useW); // connect right
+      g.addEdge(k, k + kx, w, useW); // connect bottom
+      g.addEdge(k, k - 1, w, useW); // connect left
     } else if (
       k !== rightTopK &&
       k !== lastK &&
       (k + 1) % this.mapWidth === 0
     ) {
       // right
-      g.addEdge(k, k - kx, w); // connect top
-      g.addEdge(k, k + kx, w); // connect bottom
-      g.addEdge(k, k - 1, w); // connect left
+      g.addEdge(k, k - kx, w, useW); // connect top
+      g.addEdge(k, k + kx, w, useW); // connect bottom
+      g.addEdge(k, k - 1, w, useW); // connect left
     } else if (k > leftBottomK && k < lastK) {
       // bottom
-      g.addEdge(k, k - kx, w); // connect top
-      g.addEdge(k, k + 1, w); // connect right
-      g.addEdge(k, k - 1, w); // connect left
+      g.addEdge(k, k - kx, w, useW); // connect top
+      g.addEdge(k, k + 1, w, useW); // connect right
+      g.addEdge(k, k - 1, w, useW); // connect left
     } else if (k !== 0 && k !== leftBottomK && k % this.mapWidth === 0) {
       // left
-      g.addEdge(k, k - kx, w); // connect top
-      g.addEdge(k, k + 1, w); // connect right
-      g.addEdge(k, k + kx, w); // connect bottom
+      g.addEdge(k, k - kx, w, useW); // connect top
+      g.addEdge(k, k + 1, w, useW); // connect right
+      g.addEdge(k, k + kx, w, useW); // connect bottom
     } else {
-      g.addEdge(k, k - kx, w); // connect top
-      g.addEdge(k, k + 1, w); // connect right
-      g.addEdge(k, k + kx, w); // connect bottom
-      g.addEdge(k, k - 1, w); // connect left
+      g.addEdge(k, k - kx, w, useW); // connect top
+      g.addEdge(k, k + 1, w, useW); // connect right
+      g.addEdge(k, k + kx, w, useW); // connect bottom
+      g.addEdge(k, k - 1, w, useW); // connect left
     }
   }
 
@@ -321,7 +415,7 @@ class Board {
   }
 
   draw() {
-    this.drawTiles();
+    this.drawMaze();
     this.redraw("exit");
     this.redraw("player");
   }
@@ -329,6 +423,7 @@ class Board {
   drawPath() {
     const image = new Image();
     image.onload = () => {
+      this.ctx.globalAlpha = 0.4;
       for (let i = 1; i < this.path.length - 1; i++) {
         this.ctx.drawImage(
           image,
