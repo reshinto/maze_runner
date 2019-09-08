@@ -208,6 +208,170 @@ class WeightedGraph {
   }
 }
 
+class RecursiveMaze {
+  constructor(
+    ctx,
+    graph,
+    start,
+    end,
+    mapWidth,
+    mapHeight,
+    tileWidth,
+    tileHeight,
+    useWeights
+  ) {
+    this.ctx = ctx;
+    this.g = graph;
+    this.contents = [];
+    this.world = [];
+    this.start = start;
+    this.end = end;
+    this.mapWidth = mapWidth;
+    this.mapHeight = mapHeight;
+    this.tileWidth = tileWidth;
+    this.tileHeight = tileHeight;
+    this.useWeights = useWeights;
+  }
+
+  drawMap() {
+    let coords;
+    let vertex;
+    let wall;
+    for (let i = 0; i < this.mapHeight; i++) {
+      this.contents[i] = [];
+      this.world[i] = [];
+      for (let j = 0; j < this.mapWidth; j++) {
+        coords = {x: j * this.tileWidth, y: i * this.tileHeight};
+        // surround entire maze with walls
+        wall =
+          i === 0 ||
+          i === this.mapHeight - 1 ||
+          j === 0 ||
+          j === this.mapWidth - 1
+            ? 5
+            : 1;
+        if (coords.x === this.start.x && coords.y === this.start.y) wall = 1;
+        if (coords.x === this.end.x && coords.y === this.end.y) wall = 1;
+        vertex = {
+          ctx: this.ctx,
+          coords,
+          start: this.start,
+          exit: this.end,
+          wall,
+          useWeights: this.useWeights,
+        };
+        this.contents[i][j] = vertex;
+        this.world[i][j] = wall;
+        this.g.addVertex(vertex);
+      }
+    }
+    return this.world;
+  }
+
+  drawInnerWalls(x1, x2, y1, y2) {
+    const width = x2 - x1;
+    const height = y2 - y1;
+    if (width >= height) {
+      this.verticalBisection(x1, x2, y1, y2);
+    } else {
+      // horizontal bisection
+      this.horizontalBisection(x1, x2, y1, y2);
+    }
+  }
+
+  verticalBisection(x1, x2, y1, y2) {
+    let bisection;
+    let max;
+    let min;
+    let randomPassage;
+    let current;
+    let first = false;
+    let second = false;
+    if (x2 - x1 > 3) {
+      bisection = Math.ceil((x1 + x2) / 2);
+      max = y2 - 1;
+      min = y1 + 1;
+      randomPassage = Math.floor(Math.random() * (max - min + 1)) + min;
+      if (this.contents[y2][bisection].wall === 1) {
+        randomPassage = max;
+        first = true;
+      }
+      if (this.contents[y1][bisection].wall === 1) {
+        randomPassage = min;
+        second = true;
+      }
+      for (let i = y1 + 1; i < y2; i++) {
+        if (first && second) {
+          if (i === max || i === min) continue;
+        } else if (i === randomPassage) continue;
+        current = this.contents[i][bisection];
+        current.wall = 5;
+        // ensure wall does not clash with start and end
+        if (
+          current.coords.x === current.start.x &&
+          current.coords.y === current.start.y
+        ) {
+          current.wall = 1;
+        }
+        if (
+          current.coords.x === current.exit.x &&
+          current.coords.y === current.exit.y
+        ) {
+          current.wall = 1;
+        }
+      }
+      this.drawInnerWalls(x1, bisection, y1, y2);
+      this.drawInnerWalls(bisection, x2, y1, y2);
+    }
+  }
+
+  horizontalBisection(x1, x2, y1, y2) {
+    let bisection;
+    let max;
+    let min;
+    let randomPassage;
+    let current;
+    let first = false;
+    let second = false;
+    if (y2 - y1 > 3) {
+      bisection = Math.ceil((y1 + y2) / 2);
+      max = x2 - 1;
+      min = x1 + 1;
+      randomPassage = Math.floor(Math.random() * (max - min + 1)) + min;
+      if (this.contents[bisection][x2].wall === 1) {
+        randomPassage = max;
+        first = true;
+      }
+      if (this.contents[bisection][x1].wall === 1) {
+        randomPassage = min;
+        second = true;
+      }
+      for (let i = x1 + 1; i < x2; i++) {
+        if (first && second) {
+          if (i === max || i === min) continue;
+        } else if (i === randomPassage) continue;
+        current = this.contents[bisection][i];
+        current.wall = 5;
+        // ensure wall does not clash with start and end
+        if (
+          current.coords.x === current.start.x &&
+          current.coords.y === current.start.y
+        ) {
+          current.wall = 1;
+        }
+        if (
+          current.coords.x === current.exit.x &&
+          current.coords.y === current.exit.y
+        ) {
+          current.wall = 1;
+        }
+      }
+      this.drawInnerWalls(x1, x2, y1, bisection);
+      this.drawInnerWalls(x1, x2, bisection, y2);
+    }
+  }
+}
+
 class Board {
   constructor(start, exit) {
     this.reset(start, exit);
@@ -253,9 +417,6 @@ class Board {
   setSettings(start, exit) {
     this.start = start === undefined ? this.randomPosition() : start;
     this.exit = exit === undefined ? this.randomPosition() : exit;
-    while (this.exit.x === this.start.x && this.exit.y === this.start.y) {
-      this.exit = this.randomPosition();
-    }
     this.g = new WeightedGraph(this.start);
     this.path = null;
   }
@@ -270,14 +431,14 @@ class Board {
 
   drawMaze() {
     // this.simpleMazeGenerator();
-    this.weightMazeGenerator();
+    this.recursionMazeGenerator();
   }
 
-  simpleMazeGenerator() {
+  simpleMazeGenerator(weights=false) {
     let coords;
     let vertex;
-    this.useWeights = false;
-    this.world = [[]];
+    this.useWeights = weights;
+    this.world = [];
     for (let i = 0; i < this.mapHeight; i++) {
       this.world[i] = [];
       for (let j = 0; j < this.mapWidth; j++) {
@@ -297,27 +458,22 @@ class Board {
     this.addConnections();
   }
 
-  weightMazeGenerator() {
-    let coords;
-    let vertex;
-    this.useWeights = true;
-    this.world = [[]];
-    for (let i = 0; i < this.mapHeight; i++) {
-      this.world[i] = [];
-      for (let j = 0; j < this.mapWidth; j++) {
-        coords = {x: j * this.tileWidth, y: i * this.tileHeight};
-        vertex = {
-          ctx: this.ctx,
-          coords,
-          start: this.start,
-          exit: this.exit,
-          wall: this.randomWall(i, j, coords),
-          useWeights: this.useWeights,
-        };
-        this.world[i][j] = vertex.wall;
-        this.g.addVertex(vertex);
-      }
-    }
+  recursionMazeGenerator(weights=false) {
+    this.world = [];
+    this.useWeights = weights;
+    const mazeMap = new RecursiveMaze(
+      this.ctx,
+      this.g,
+      this.start,
+      this.exit,
+      this.mapWidth,
+      this.mapHeight,
+      this.tileWidth,
+      this.tileHeight,
+      this.useWeights
+    );
+    this.world = mazeMap.drawMap();
+    mazeMap.drawInnerWalls(0, this.mapWidth - 1, 0, this.mapHeight - 1);
     this.addConnections();
   }
 
