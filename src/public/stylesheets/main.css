@@ -3,7 +3,7 @@
   box-sizing: border-box;
 }
 
-body {
+.mybody {
   height: 100vh;
   margin: 0;
   /* overflow: hidden; */
@@ -11,26 +11,20 @@ body {
   width: 100vw;
 }
 
-header {
-  border: 1px solid red;
-  height: 150px;
-  position: fixed;
-  top: 0;
-  width: 100vw;
-}
-
-main {
+.mymain {
+  align-items: center;
   background-color: black;
   /* border: 1px solid blue; */
   display: flex;
+  /* flex-direction: column; */
   justify-content: center;
-  align-items: center;
   position: fixed;
   top: 150px;
   width: 100vw;
+  z-index: -1;
 }
 
-canvas {
+.mycanvas {
   /* background-color: cyan; */
   /* background-size: 100%; */
   border: 5px solid gray;

@@ -1,0 +1,46 @@
+.myheader {
+  /* border: 1px solid red; */
+  /* background-color: #8b4513; */
+  background-color: black;
+  height: 150px;
+  position: fixed;
+  top: 0;
+  width: 100vw;
+  z-index: 1;
+}
+
+h1 {
+  /* border: 1px solid blue; */
+  color: #cd853f;
+  position: absolute;
+  text-align: center;
+  text-transform: uppercase;
+  top: 20px;
+  width: 100vw;
+}
+
+.choose {
+  /* border: 1px solid blue; */
+  bottom: 5px;
+  display: flex;
+  justify-content: center;
+  position: absolute;
+  width: 100vw;
+}
+
+.btn-dark.custom-btn,
+.btn-dark.custom-btn:hover,
+.btn-dark.custom-btn:active,
+.btn-dark.custom-btn:visited,
+.btn-dark.custom-btn:focus,
+.btn-dark.custom-btn:active:focus {
+  background-color: black;
+  border-color: black;
+  color: #cd853f;
+  text-transform: uppercase;
+}
+
+.space {
+  margin-left: 10px;
+  margin-right: 10px;
+}

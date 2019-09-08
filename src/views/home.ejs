@@ -5,33 +5,55 @@
   <title>Maze Runner</title>
   <link rel="stylesheet" href="/stylesheets/header.css">
   <link rel="stylesheet" href="/stylesheets/main.css">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <script src="//cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 </head>
-<body>
-  <header>
+<body class="mybody">
+  <header class="myheader">
     <h1>Maze Runner</h1>
     <div class="choose">
-      <span>
-        <button id="gacha">Gacha</button>
-      </span>
-      <span>
-        <label for="mazeType">Maze Type</label>
-        <select id="mazeType" name="mazeType">
-          <option value="recursive">Recursive</option>
-          <option value="random">Random</option>
-        </select>
-      </span>
-      <span>
-        <label for="mode">Game Mode</label>
-        <select id="mode" name="mode">
-          <option value="maze">Maze</option>
-          <option value="bombs">Bombs</option>
-        </select>
-      </span>
+      <button id="new" type="button" class="btn btn-dark custom-btn">New Game</button>
+      <div class="dropdown space">
+        <button class="btn btn-dark custom-btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Maze Type
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+          <a id="recursive" class="dropdown-item" href="#">Recursive</a>
+          <a id="random" class="dropdown-item" href="#">Random</a>
+        </div>
+      </div>
+      <button id="gacha" type="button" class="btn btn-dark custom-btn space">Gacha</button>
+      <div class="dropdown space">
+        <button class="btn btn-dark custom-btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Game Mode
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+          <a id="maze" class="dropdown-item" href="#">Maze</a>
+          <a id="bombs" class="dropdown-item" href="#">Bombs</a>
+        </div>
+      </div>
+      <div class="dropdown">
+        <button class="btn btn-dark custom-btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Voice Mode
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+          <a id="speechOn" class="dropdown-item" href="#">On</a>
+          <a id="speechOff" class="dropdown-item" href="#">Off</a>
+        </div>
+      </div>
     </div>
   </header>
-  <main>
-    <canvas id="canvas"></canvas>
+  <main class="mymain">
+    <canvas id="canvas" class="mycanvas"></canvas>
   </main>
-  <script type="text/javascript" src="/javascript/board.js"></script>
+  <script type="text/javascript" src="/javascript/Node.js"></script>
+  <script type="text/javascript" src="/javascript/PriorityQueue.js"></script>
+  <script type="text/javascript" src="/javascript/WeightedGraph.js"></script>
+  <script type="text/javascript" src="/javascript/Maze.js"></script>
+  <script type="text/javascript" src="/javascript/Board.js"></script>
+  <script type="text/javascript" src="/javascript/main.js"></script>
 </body>
 </html>
