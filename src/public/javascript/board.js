@@ -171,7 +171,11 @@ class WeightedGraph {
     });
   }
 
-  dijkstra(finish) {
+  dijkstra(finish, start) {
+    if (start !== undefined) {
+      this.start = start;
+      this.drawGraph();
+    }
     if (this.searched) this.drawGraph();
     while (this.pq.values.length) {
       const currentNode = this.pq.dequeue();
@@ -231,10 +235,15 @@ class Maze {
     this.useWeights = useWeights;
   }
 
+  resetMaze() {
+    this.world = [];
+    this.contents = [];
+  }
+
   drawRandomMazeMap() {
     let coords;
     let vertex;
-    this.world = [];
+    this.resetMaze();
     for (let i = 0; i < this.mapHeight; i++) {
       this.world[i] = [];
       for (let j = 0; j < this.mapWidth; j++) {
@@ -268,8 +277,7 @@ class Maze {
     let coords;
     let vertex;
     let wall;
-    this.world = [];
-    this.contents = [];
+    this.resetMaze();
     for (let i = 0; i < this.mapHeight; i++) {
       this.contents[i] = [];
       this.world[i] = [];
@@ -477,8 +485,10 @@ class Maze {
 }
 
 class Board {
-  constructor(start, exit, mazeType, useWeights) {
-    this.reset(start, exit, mazeType, useWeights);
+  constructor(startKey, exitKey, mazeType, useWeights) {
+    this.c = document.getElementById("canvas");
+    this.ctx = this.c.getContext("2d");
+    this.reset(startKey, exitKey, mazeType, useWeights);
   }
 
   getHeaderHeight() {
@@ -505,33 +515,40 @@ class Board {
   setCanvasDimensions() {
     this.canvasWidth = this.mapWidth * this.tileWidth;
     this.canvasHeight = this.mapHeight * this.tileHeight;
-    this.c = document.getElementById("canvas");
     this.c.height = this.canvasHeight;
     this.c.width = this.canvasWidth;
-    this.ctx = this.c.getContext("2d");
   }
 
-  setSettings(start, exit) {
-    this.start = start === undefined ? this.randomPosition() : start;
-    this.exit = exit === undefined ? this.randomPosition() : exit;
+  setSettings(startKey, exitKey) {
+    this.startKey = this.randomKey();
+    this.exitKey = this.randomKey();
+    this.start = this.getCoords(this.startKey);
+    this.exit = this.getCoords(this.exitKey);
     this.g = new WeightedGraph(this.start);
     this.path = null;
   }
 
-  randomPosition() {
-    return {
-      x: Math.floor(Math.random() * this.mapWidth) * 30,
-      y: Math.floor(Math.random() * this.mapHeight) * 30,
-    };
+  randomKey() {
+    return Math.floor(Math.random() * this.mapWidth * this.mapHeight);
   }
 
-  reset(start, exit, mazeType, useWeights) {
+  getCoords(key) {
+    let yCount = 0;
+    let newKey = key;
+    while (newKey >= this.mapWidth) {
+      yCount++;
+      newKey -= this.mapWidth;
+    }
+    return {x: newKey*this.tileWidth, y: yCount*this.tileHeight};
+  }
+
+  reset(startKey, exitKey, mazeType, useWeights) {
     this.useWeights = useWeights === undefined ? false: useWeights;
     this.mazeType = mazeType;
     this.setMainHeight();
     this.setMapDimensions();
     this.setCanvasDimensions();
-    this.setSettings(start, exit);
+    this.setSettings(startKey, exitKey);
     this.draw();
   }
 
@@ -563,7 +580,19 @@ class Board {
     }
   }
 
-  redraw(type) {
+  redraw(type, incrementKey, newStart) {
+    let redraw = false;
+    let oldStart;
+    if (newStart === undefined) start = this.start;
+    else start = newStart;
+    if (incrementKey !== undefined) {
+      redraw = true;
+      oldStart = this.start;
+      if (this.g.vertexList[this.startKey+incrementKey].wall === 1) {
+        this.startKey += incrementKey;
+        this.start = this.getCoords(this.startKey);
+      } else return;
+    }
     let file;
     const image = new Image();
     switch (type) {
@@ -582,20 +611,29 @@ class Board {
           this.ctx.drawImage(image, this.exit.x, this.exit.y);
         };
         break;
+      case "floor":
+        file = "/images/floor2.png";
+        image.onload = () => {
+          this.ctx.drawImage(image, start.x, start.y);
+        };
+        break;
       default:
         file = "/images/floor2.png";
         break;
     }
     image.src = file;
+    if (oldStart !== undefined && redraw === true) {
+      this.redraw("floor", undefined, oldStart);
+    }
   }
 
-  findPath() {
+  findPath(start) {
     this.path = null;
     const pathSlots = ["dijkstra"];
     const num = Math.floor(Math.random() * pathSlots.length);
     switch (pathSlots[num]) {
       case "dijkstra":
-        this.path = this.g.dijkstra(this.exit);
+        this.path = this.g.dijkstra(this.exit, start);
         break;
       default:
         this.path = null;
@@ -608,13 +646,14 @@ class Board {
   drawPath() {
     const image = new Image();
     image.onload = () => {
-      this.ctx.globalAlpha = 0.4;
       for (let i = 1; i < this.path.length - 1; i++) {
+        this.ctx.globalAlpha = 0.4;
         this.ctx.drawImage(
           image,
           this.g.vertexList[this.path[i]].coords.x,
           this.g.vertexList[this.path[i]].coords.y
         );
+        this.ctx.globalAlpha = 1;
       }
     };
     image.src = "/images/path.png";
@@ -628,7 +667,7 @@ class Board {
 let start;
 let exit;
 const mazeType = "recursive";
-let useWeights;
+const useWeights = false;
 
 const b = new Board(start, exit, mazeType, useWeights);
 window.addEventListener("resize", () => {
@@ -636,5 +675,48 @@ window.addEventListener("resize", () => {
 });
 const gacha = document.getElementById("gacha");
 gacha.addEventListener("click", () => {
-  console.log(b.findPath());
+  b.findPath(b.start);
 });
+
+window.addEventListener("keydown", check, false);
+
+function check(e) {
+  switch (e.keyCode) {
+    case 87:
+    case 38:
+      // up
+      if (b.start.y > 0) {
+        b.redraw("player", -b.mapWidth);
+      }
+      break;
+    case 68:
+    case 39:
+      // right
+      if (b.start.x < b.mapWidth*b.tileWidth - b.tileWidth) {
+        b.redraw("player", 1);
+      }
+      break;
+    case 83:
+    case 40:
+      // down
+      if (b.start.y < b.mapHeight*b.tileHeight - b.tileHeight) {
+        b.redraw("player", +b.mapWidth);
+      }
+      break;
+    case 65:
+    case 37:
+      // left
+      if (b.start.x > 0) {
+        b.redraw("player", -1);
+      }
+      break;
+    default:
+      break;
+  }
+  if (b.startKey === b.exitKey) {
+    setTimeout(()=> {
+      alert("end game");
+      b.reset(start, exit, mazeType, useWeights);
+    }, 200);
+  }
+}

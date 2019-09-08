@@ -9,7 +9,25 @@
 <body>
   <header>
     <h1>Maze Runner</h1>
-    <button id="gacha">Gacha</button>
+    <div class="choose">
+      <span>
+        <button id="gacha">Gacha</button>
+      </span>
+      <span>
+        <label for="mazeType">Maze Type</label>
+        <select id="mazeType" name="mazeType">
+          <option value="recursive">Recursive</option>
+          <option value="random">Random</option>
+        </select>
+      </span>
+      <span>
+        <label for="mode">Game Mode</label>
+        <select id="mode" name="mode">
+          <option value="maze">Maze</option>
+          <option value="bombs">Bombs</option>
+        </select>
+      </span>
+    </div>
   </header>
   <main>
     <canvas id="canvas"></canvas>
