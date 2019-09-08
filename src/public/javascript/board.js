@@ -208,12 +208,12 @@ class WeightedGraph {
   }
 }
 
-class RecursiveMaze {
+class Maze {
   constructor(
     ctx,
     graph,
     start,
-    end,
+    exit,
     mapWidth,
     mapHeight,
     tileWidth,
@@ -222,10 +222,8 @@ class RecursiveMaze {
   ) {
     this.ctx = ctx;
     this.g = graph;
-    this.contents = [];
-    this.world = [];
     this.start = start;
-    this.end = end;
+    this.exit = exit;
     this.mapWidth = mapWidth;
     this.mapHeight = mapHeight;
     this.tileWidth = tileWidth;
@@ -233,10 +231,45 @@ class RecursiveMaze {
     this.useWeights = useWeights;
   }
 
-  drawMap() {
+  drawRandomMazeMap() {
+    let coords;
+    let vertex;
+    this.world = [];
+    for (let i = 0; i < this.mapHeight; i++) {
+      this.world[i] = [];
+      for (let j = 0; j < this.mapWidth; j++) {
+        coords = {x: j * this.tileWidth, y: i * this.tileHeight};
+        vertex = {
+          ctx: this.ctx,
+          coords,
+          start: this.start,
+          exit: this.exit,
+          wall: this.randomWall(i, j, coords),
+          useWeights: this.useWeights,
+        };
+        this.world[i][j] = vertex.wall;
+        this.g.addVertex(vertex);
+      }
+    }
+    this.addConnections();
+    return this.world;
+  }
+
+  randomWall(i, j, coords) {
+    let wall;
+    wall = Math.random() > 0.75 ? 5 : 1;
+    if (coords.x === this.start.x && coords.y === this.start.y) wall = 1;
+    if (coords.x === this.exit.x && coords.y === this.exit.y) wall = 1;
+    return wall;
+  }
+
+
+  drawRecursiveMap() {
     let coords;
     let vertex;
     let wall;
+    this.world = [];
+    this.contents = [];
     for (let i = 0; i < this.mapHeight; i++) {
       this.contents[i] = [];
       this.world[i] = [];
@@ -251,12 +284,12 @@ class RecursiveMaze {
             ? 5
             : 1;
         if (coords.x === this.start.x && coords.y === this.start.y) wall = 1;
-        if (coords.x === this.end.x && coords.y === this.end.y) wall = 1;
+        if (coords.x === this.exit.x && coords.y === this.exit.y) wall = 1;
         vertex = {
           ctx: this.ctx,
           coords,
           start: this.start,
-          exit: this.end,
+          exit: this.exit,
           wall,
           useWeights: this.useWeights,
         };
@@ -265,10 +298,12 @@ class RecursiveMaze {
         this.g.addVertex(vertex);
       }
     }
+    this.drawRecursiveInnerWalls(0, this.mapWidth - 1, 0, this.mapHeight - 1);
+    this.addConnections();
     return this.world;
   }
 
-  drawInnerWalls(x1, x2, y1, y2) {
+  drawRecursiveInnerWalls(x1, x2, y1, y2) {
     const width = x2 - x1;
     const height = y2 - y1;
     if (width >= height) {
@@ -306,7 +341,7 @@ class RecursiveMaze {
         } else if (i === randomPassage) continue;
         current = this.contents[i][bisection];
         current.wall = 5;
-        // ensure wall does not clash with start and end
+        // ensure wall does not clash with start and exit
         if (
           current.coords.x === current.start.x &&
           current.coords.y === current.start.y
@@ -320,8 +355,8 @@ class RecursiveMaze {
           current.wall = 1;
         }
       }
-      this.drawInnerWalls(x1, bisection, y1, y2);
-      this.drawInnerWalls(bisection, x2, y1, y2);
+      this.drawRecursiveInnerWalls(x1, bisection, y1, y2);
+      this.drawRecursiveInnerWalls(bisection, x2, y1, y2);
     }
   }
 
@@ -352,7 +387,7 @@ class RecursiveMaze {
         } else if (i === randomPassage) continue;
         current = this.contents[bisection][i];
         current.wall = 5;
-        // ensure wall does not clash with start and end
+        // ensure wall does not clash with start and exit
         if (
           current.coords.x === current.start.x &&
           current.coords.y === current.start.y
@@ -366,123 +401,9 @@ class RecursiveMaze {
           current.wall = 1;
         }
       }
-      this.drawInnerWalls(x1, x2, y1, bisection);
-      this.drawInnerWalls(x1, x2, bisection, y2);
+      this.drawRecursiveInnerWalls(x1, x2, y1, bisection);
+      this.drawRecursiveInnerWalls(x1, x2, bisection, y2);
     }
-  }
-}
-
-class Board {
-  constructor(start, exit) {
-    this.reset(start, exit);
-  }
-
-  randomPosition() {
-    return {
-      x: Math.floor(Math.random() * this.mapWidth) * 30,
-      y: Math.floor(Math.random() * this.mapHeight) * 30,
-    };
-  }
-
-  setMainHeight() {
-    const main = document.getElementsByTagName("main");
-    this.mainHeight = window.innerHeight - this.getHeaderHeight();
-    main[0].style.height = `${this.mainHeight}px`;
-  }
-
-  setMapDimensions() {
-    this.tileWidth = 30;
-    this.tileHeight = 30;
-    this.mapWidth = Math.round((window.innerWidth - 40) / this.tileWidth);
-    this.mapHeight = Math.round((this.mainHeight - 40) / this.tileHeight);
-  }
-
-  setCanvasDimensions() {
-    this.canvasWidth = this.mapWidth * this.tileWidth;
-    this.canvasHeight = this.mapHeight * this.tileHeight;
-    this.c = document.getElementById("canvas");
-    this.c.height = this.canvasHeight;
-    this.c.width = this.canvasWidth;
-    this.ctx = this.c.getContext("2d");
-  }
-
-  reset(start, exit) {
-    this.setMainHeight();
-    this.setMapDimensions();
-    this.setCanvasDimensions();
-    this.setSettings(start, exit);
-    this.draw();
-  }
-
-  setSettings(start, exit) {
-    this.start = start === undefined ? this.randomPosition() : start;
-    this.exit = exit === undefined ? this.randomPosition() : exit;
-    this.g = new WeightedGraph(this.start);
-    this.path = null;
-  }
-
-  getHeaderHeight() {
-    const header = document.getElementsByTagName("header");
-    const headerStr = window
-      .getComputedStyle(header[0])
-      .getPropertyValue("height");
-    return headerStr.slice(0, headerStr.length - 2);
-  }
-
-  drawMaze() {
-    // this.simpleMazeGenerator();
-    this.recursionMazeGenerator();
-  }
-
-  simpleMazeGenerator(weights=false) {
-    let coords;
-    let vertex;
-    this.useWeights = weights;
-    this.world = [];
-    for (let i = 0; i < this.mapHeight; i++) {
-      this.world[i] = [];
-      for (let j = 0; j < this.mapWidth; j++) {
-        coords = {x: j * this.tileWidth, y: i * this.tileHeight};
-        vertex = {
-          ctx: this.ctx,
-          coords,
-          start: this.start,
-          exit: this.exit,
-          wall: this.randomWall(i, j, coords),
-          useWeights: this.useWeights,
-        };
-        this.world[i][j] = vertex.wall;
-        this.g.addVertex(vertex);
-      }
-    }
-    this.addConnections();
-  }
-
-  recursionMazeGenerator(weights=false) {
-    this.world = [];
-    this.useWeights = weights;
-    const mazeMap = new RecursiveMaze(
-      this.ctx,
-      this.g,
-      this.start,
-      this.exit,
-      this.mapWidth,
-      this.mapHeight,
-      this.tileWidth,
-      this.tileHeight,
-      this.useWeights
-    );
-    this.world = mazeMap.drawMap();
-    mazeMap.drawInnerWalls(0, this.mapWidth - 1, 0, this.mapHeight - 1);
-    this.addConnections();
-  }
-
-  randomWall(i, j, coords) {
-    let wall;
-    wall = Math.random() > 0.75 ? 5 : 1;
-    if (coords.x === this.start.x && coords.y === this.start.y) wall = 1;
-    if (coords.x === this.exit.x && coords.y === this.exit.y) wall = 1;
-    return wall;
   }
 
   addConnections() {
@@ -553,21 +474,65 @@ class Board {
       g.addEdge(k, k - 1, w, useW); // connect left
     }
   }
+}
 
-  findPath() {
+class Board {
+  constructor(start, exit, mazeType, useWeights) {
+    this.reset(start, exit, mazeType, useWeights);
+  }
+
+  getHeaderHeight() {
+    const header = document.getElementsByTagName("header");
+    const headerStr = window
+      .getComputedStyle(header[0])
+      .getPropertyValue("height");
+    return headerStr.slice(0, headerStr.length - 2);
+  }
+
+  setMainHeight() {
+    const main = document.getElementsByTagName("main");
+    this.mainHeight = window.innerHeight - this.getHeaderHeight();
+    main[0].style.height = `${this.mainHeight}px`;
+  }
+
+  setMapDimensions() {
+    this.tileWidth = 30;
+    this.tileHeight = 30;
+    this.mapWidth = Math.round((window.innerWidth - 40) / this.tileWidth);
+    this.mapHeight = Math.round((this.mainHeight - 40) / this.tileHeight);
+  }
+
+  setCanvasDimensions() {
+    this.canvasWidth = this.mapWidth * this.tileWidth;
+    this.canvasHeight = this.mapHeight * this.tileHeight;
+    this.c = document.getElementById("canvas");
+    this.c.height = this.canvasHeight;
+    this.c.width = this.canvasWidth;
+    this.ctx = this.c.getContext("2d");
+  }
+
+  setSettings(start, exit) {
+    this.start = start === undefined ? this.randomPosition() : start;
+    this.exit = exit === undefined ? this.randomPosition() : exit;
+    this.g = new WeightedGraph(this.start);
     this.path = null;
-    const pathSlots = ["dijkstra"];
-    const num = Math.floor(Math.random() * pathSlots.length);
-    switch (pathSlots[num]) {
-      case "dijkstra":
-        this.path = this.g.dijkstra(this.exit);
-        break;
-      default:
-        this.path = null;
-        break;
-    }
-    this.drawPath();
-    return this.path;
+  }
+
+  randomPosition() {
+    return {
+      x: Math.floor(Math.random() * this.mapWidth) * 30,
+      y: Math.floor(Math.random() * this.mapHeight) * 30,
+    };
+  }
+
+  reset(start, exit, mazeType, useWeights) {
+    this.useWeights = useWeights === undefined ? false: useWeights;
+    this.mazeType = mazeType;
+    this.setMainHeight();
+    this.setMapDimensions();
+    this.setCanvasDimensions();
+    this.setSettings(start, exit);
+    this.draw();
   }
 
   draw() {
@@ -576,21 +541,26 @@ class Board {
     this.redraw("player");
   }
 
-  drawPath() {
-    const image = new Image();
-    image.onload = () => {
-      this.ctx.globalAlpha = 0.4;
-      for (let i = 1; i < this.path.length - 1; i++) {
-        this.ctx.drawImage(
-          image,
-          this.g.vertexList[this.path[i]].coords.x,
-          this.g.vertexList[this.path[i]].coords.y
-        );
-      }
-    };
-    image.src = "/images/path.png";
-    this.redraw("exit");
-    this.redraw("player");
+  drawMaze() {
+    const maze = new Maze(
+      this.ctx,
+      this.g,
+      this.start,
+      this.exit,
+      this.mapWidth,
+      this.mapHeight,
+      this.tileWidth,
+      this.tileHeight,
+      this.useWeights
+    );
+    switch (this.mazeType) {
+      case "recursive":
+        this.world = maze.drawRecursiveMap();
+        break;
+      default:
+        this.world = maze.drawRandomMazeMap();
+        break;
+    }
   }
 
   redraw(type) {
@@ -618,16 +588,51 @@ class Board {
     }
     image.src = file;
   }
+
+  findPath() {
+    this.path = null;
+    const pathSlots = ["dijkstra"];
+    const num = Math.floor(Math.random() * pathSlots.length);
+    switch (pathSlots[num]) {
+      case "dijkstra":
+        this.path = this.g.dijkstra(this.exit);
+        break;
+      default:
+        this.path = null;
+        break;
+    }
+    this.drawPath();
+    return this.path;
+  }
+
+  drawPath() {
+    const image = new Image();
+    image.onload = () => {
+      this.ctx.globalAlpha = 0.4;
+      for (let i = 1; i < this.path.length - 1; i++) {
+        this.ctx.drawImage(
+          image,
+          this.g.vertexList[this.path[i]].coords.x,
+          this.g.vertexList[this.path[i]].coords.y
+        );
+      }
+    };
+    image.src = "/images/path.png";
+    this.redraw("exit");
+    this.redraw("player");
+  }
 }
 
 // const start = {x: 0, y: 0};
 // const exit = {x: 90, y: 180};
 let start;
 let exit;
+const mazeType = "recursive";
+let useWeights;
 
-const b = new Board(start, exit);
+const b = new Board(start, exit, mazeType, useWeights);
 window.addEventListener("resize", () => {
-  b.reset();
+  b.reset(start, exit, mazeType, useWeights);
 });
 const gacha = document.getElementById("gacha");
 gacha.addEventListener("click", () => {
