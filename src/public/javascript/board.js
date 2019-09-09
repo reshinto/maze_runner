@@ -2,6 +2,7 @@
 
 class Board {
   constructor(startKey, exitKey, mazeType, useWeights) {
+    this.pathSlots = ["dijkstra"];
     this.c = document.getElementById("canvas");
     this.ctx = this.c.getContext("2d");
     this.reset(startKey, exitKey, mazeType, useWeights);
@@ -59,6 +60,8 @@ class Board {
   }
 
   reset(startKey, exitKey, mazeType, useWeights) {
+    this.pathDisplayed = false;
+    this.chosenPath;
     this.useWeights = useWeights === undefined ? false : useWeights;
     this.mazeType = mazeType;
     this.setMainHeight();
@@ -96,25 +99,38 @@ class Board {
     }
   }
 
-  redraw(type, incrementKey, newStart) {
+  redraw(type, incrementKey, newStart, walkPath) {
     let redraw = false;
     let oldStart;
     let start;
     if (newStart === undefined) start = this.start;
     else start = newStart;
-    if (incrementKey !== undefined) {
+    if (incrementKey !== undefined && !this.useWeights) {
       redraw = true;
       oldStart = this.start;
-      if (this.g.vertexList[this.startKey + incrementKey].wall === 1) {
+      if (walkPath === true) {
+        this.startKey = incrementKey;
+        this.start = this.getCoords(this.startKey);
+      } else if (
+        walkPath === undefined &&
+        this.g.vertexList[this.startKey + incrementKey].wall === 1
+      ) {
         this.startKey += incrementKey;
         this.start = this.getCoords(this.startKey);
       } else if (
+        walkPath === undefined &&
         this.g.vertexList[this.startKey + incrementKey].wall > 1 &&
         !this.useWeights
       ) {
+        // player hit the wall
         this.randomReply();
         return;
-      } else if (this.useWeights) {
+      } else if (walkPath === undefined && this.useWeights) {
+        // if bombs mode activated, can pass through wall
+        this.startKey += incrementKey;
+        this.start = this.getCoords(this.startKey);
+        this.randomReply(this.bombsReplies());
+      } else if (walkPath === true && this.useWeights) {
         this.startKey += incrementKey;
         this.start = this.getCoords(this.startKey);
         this.randomReply(this.bombsReplies());
@@ -154,11 +170,17 @@ class Board {
     }
   }
 
+  getPath() {
+    if (this.chosenPath === undefined) {
+      const num = Math.floor(Math.random() * this.pathSlots.length);
+      this.chosenPath = this.pathSlots[num];
+    }
+  }
+
   findPath(start) {
+    this.pathDisplayed = true;
     this.path = null;
-    const pathSlots = ["dijkstra"];
-    const num = Math.floor(Math.random() * pathSlots.length);
-    switch (pathSlots[num]) {
+    switch (this.chosenPath) {
       case "dijkstra":
         this.path = this.g.dijkstra(this.exit, start);
         break;
@@ -188,7 +210,7 @@ class Board {
     this.redraw("player");
   }
 
-  randomReply(type=this.mazeReplies()) {
+  randomReply(type = this.mazeReplies()) {
     const repliesArr = type;
     const randomNum = Math.floor(Math.random() * repliesArr.length);
     const msg = new SpeechSynthesisUtterance(repliesArr[randomNum]);

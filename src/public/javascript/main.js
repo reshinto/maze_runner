@@ -19,7 +19,8 @@
 
   const gacha = document.getElementById("gacha");
   gacha.addEventListener("click", () => {
-    console.log(b.findPath(b.start));
+    b.getPath();
+    b.findPath(b.start);
   });
 
   const recursiveLink = document.getElementById("recursive");
@@ -121,9 +122,14 @@
     }
   }
 
-  function activateSpeech() {
+  function txtToSpeech(text) {
+    const msg = new SpeechSynthesisUtterance(text);
+    window.speechSynthesis.speak(msg);
+  }
+
+  function commands() {
     // Define commands
-    const commands = {
+    return {
       "move up": up,
       "move right": right,
       "move down": down,
@@ -132,7 +138,29 @@
         b.reset(startKey, exitKey, mazeType, useWeights);
       },
       "help": function() {
+        b.getPath();
+        txtToSpeech(`You have rolled ${b.chosenPath}`);
         b.findPath(b.start);
+      },
+      "end game": function() {
+        if (b.pathDisplayed === true) {
+          const path = b.findPath(b.start);
+          for (let i = 0; i < path.length; i++) {
+            (function(i) {
+              setTimeout(() => {
+                b.redraw("player", path[i], undefined, true);
+                if (i === path.length - 1) {
+                  setTimeout(() => {
+                    alert("end game");
+                    b.reset(startKey, exitKey, mazeType, useWeights);
+                  }, 200);
+                }
+              }, 300 * i);
+            })(i);
+          }
+        } else {
+          txtToSpeech("No cheating allowed.");
+        }
       },
       "activate recursive maze": function() {
         mazeType = "recursive";
@@ -153,21 +181,18 @@
       "deactivate voice mode": function() {
         useSpeech = false;
         activateSpeech();
-        const msg = new SpeechSynthesisUtterance(
-          "Voice mode deactivated.",
-        );
-        window.speechSynthesis.speak(msg);
+        txtToSpeech("Voice mode deactivated.");
       },
     };
+  }
+
+  function activateSpeech() {
     if (useSpeech) {
-      const msg = new SpeechSynthesisUtterance(
-        "Voice mode activated. Please give your command.",
-      );
-      window.speechSynthesis.speak(msg);
+      txtToSpeech("Voice mode activated. Please give your command.");
       if (annyang) {
         console.log(annyang.isListening());
         // Add commands to annyang
-        annyang.addCommands(commands);
+        annyang.addCommands(commands());
 
         // Start listening.
         annyang.start({paused: false});
@@ -175,11 +200,9 @@
         annyang.addCallback("soundstart", function() {
           console.log("sound detected");
         });
+      } else {
+        annyang.abort();
       }
-    } else {
-      annyang.abort();
     }
   }
-
-  // activateSpeech();
 })();
