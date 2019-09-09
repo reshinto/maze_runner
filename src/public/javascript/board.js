@@ -55,11 +55,11 @@ class Board {
       yCount++;
       newKey -= this.mapWidth;
     }
-    return {x: newKey*this.tileWidth, y: yCount*this.tileHeight};
+    return {x: newKey * this.tileWidth, y: yCount * this.tileHeight};
   }
 
   reset(startKey, exitKey, mazeType, useWeights) {
-    this.useWeights = useWeights === undefined ? false: useWeights;
+    this.useWeights = useWeights === undefined ? false : useWeights;
     this.mazeType = mazeType;
     this.setMainHeight();
     this.setMapDimensions();
@@ -84,7 +84,7 @@ class Board {
       this.mapHeight,
       this.tileWidth,
       this.tileHeight,
-      this.useWeights
+      this.useWeights,
     );
     switch (this.mazeType) {
       case "recursive":
@@ -105,12 +105,19 @@ class Board {
     if (incrementKey !== undefined) {
       redraw = true;
       oldStart = this.start;
-      if (this.g.vertexList[this.startKey+incrementKey].wall === 1) {
+      if (this.g.vertexList[this.startKey + incrementKey].wall === 1) {
         this.startKey += incrementKey;
         this.start = this.getCoords(this.startKey);
+      } else if (
+        this.g.vertexList[this.startKey + incrementKey].wall > 1 &&
+        !this.useWeights
+      ) {
+        this.randomReply();
+        return;
       } else if (this.useWeights) {
         this.startKey += incrementKey;
         this.start = this.getCoords(this.startKey);
+        this.randomReply(this.bombsReplies());
       } else return;
     }
     let file;
@@ -171,7 +178,7 @@ class Board {
         this.ctx.drawImage(
           image,
           this.g.vertexList[this.path[i]].coords.x,
-          this.g.vertexList[this.path[i]].coords.y
+          this.g.vertexList[this.path[i]].coords.y,
         );
         this.ctx.globalAlpha = 1;
       }
@@ -179,5 +186,36 @@ class Board {
     image.src = "/images/path.png";
     this.redraw("exit");
     this.redraw("player");
+  }
+
+  randomReply(type=this.mazeReplies()) {
+    const repliesArr = type;
+    const randomNum = Math.floor(Math.random() * repliesArr.length);
+    const msg = new SpeechSynthesisUtterance(repliesArr[randomNum]);
+    window.speechSynthesis.speak(msg);
+  }
+
+  mazeReplies() {
+    return [
+      "Ouch!",
+      "I can't go there!",
+      "That hurts!",
+      "Watch where you are going!",
+      "You suck as this!",
+      "I hate you!",
+      "Ba ka!",
+      "Stop driving me into the wall!",
+      "You should be sent to a driving school!",
+    ];
+  }
+
+  bombsReplies() {
+    return [
+      "Ouch!",
+      "Damn! It hurts!",
+      "No!",
+      "I hate you!",
+      "Stop killing me!",
+    ];
   }
 }

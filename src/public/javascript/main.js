@@ -19,7 +19,7 @@
 
   const gacha = document.getElementById("gacha");
   gacha.addEventListener("click", () => {
-    b.findPath(b.start);
+    console.log(b.findPath(b.start));
   });
 
   const recursiveLink = document.getElementById("recursive");
@@ -92,60 +92,94 @@
   function up() {
     if (b.start.y > 0) {
       b.redraw("player", -b.mapWidth);
+    } else {
+      b.randomReply();
     }
   }
 
   function right() {
     if (b.start.x < b.mapWidth * b.tileWidth - b.tileWidth) {
       b.redraw("player", 1);
+    } else {
+      b.randomReply();
     }
   }
 
   function down() {
     if (b.start.y < b.mapHeight * b.tileHeight - b.tileHeight) {
       b.redraw("player", +b.mapWidth);
+    } else {
+      b.randomReply();
     }
   }
 
   function left() {
     if (b.start.x > 0) {
       b.redraw("player", -1);
+    } else {
+      b.randomReply();
     }
   }
 
   function activateSpeech() {
+    // Define commands
+    const commands = {
+      "move up": up,
+      "move right": right,
+      "move down": down,
+      "move left": left,
+      "new game": function() {
+        b.reset(startKey, exitKey, mazeType, useWeights);
+      },
+      "help": function() {
+        b.findPath(b.start);
+      },
+      "activate recursive maze": function() {
+        mazeType = "recursive";
+        b.reset(startKey, exitKey, mazeType, useWeights);
+      },
+      "activate random maze": function() {
+        mazeType = "random";
+        b.reset(startKey, exitKey, mazeType, useWeights);
+      },
+      "activate bombs mode": function() {
+        useWeights = true;
+        b.reset(startKey, exitKey, mazeType, useWeights);
+      },
+      "activate maze mode": function() {
+        useWeights = false;
+        b.reset(startKey, exitKey, mazeType, useWeights);
+      },
+      "deactivate voice mode": function() {
+        useSpeech = false;
+        activateSpeech();
+        const msg = new SpeechSynthesisUtterance(
+          "Voice mode deactivated.",
+        );
+        window.speechSynthesis.speak(msg);
+      },
+    };
     if (useSpeech) {
+      const msg = new SpeechSynthesisUtterance(
+        "Voice mode activated. Please give your command.",
+      );
+      window.speechSynthesis.speak(msg);
       if (annyang) {
-        // Define commands
-        const commands = {
-          "up": function() {
-            console.log("up");
-            up();
-          },
-          "right": function() {
-            console.log("right");
-            right();
-          },
-          "down": function() {
-            console.log("down");
-            down();
-          },
-          "left": function() {
-            console.log("left");
-            left();
-          },
-        };
-
+        console.log(annyang.isListening());
         // Add commands to annyang
         annyang.addCommands(commands);
 
         // Start listening.
         annyang.start({paused: false});
+
+        annyang.addCallback("soundstart", function() {
+          console.log("sound detected");
+        });
       }
     } else {
-      annyang.pause();
+      annyang.abort();
     }
   }
 
-  activateSpeech();
-}());
+  // activateSpeech();
+})();
