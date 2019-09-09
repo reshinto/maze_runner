@@ -1,12 +1,12 @@
 .myheader {
   /* border: 1px solid red; */
   /* background-color: #8b4513; */
-  background-color: black;
+  /* background-color: black; */
   height: 150px;
   position: fixed;
   top: 0;
   width: 100vw;
-  z-index: 1;
+  z-index: 2;
 }
 
 h1 {
@@ -15,7 +15,7 @@ h1 {
   position: absolute;
   text-align: center;
   text-transform: uppercase;
-  top: 20px;
+  top: 25px;
   width: 100vw;
 }
 

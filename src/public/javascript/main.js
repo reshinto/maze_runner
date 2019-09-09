@@ -59,9 +59,9 @@
     activateSpeech();
   });
 
-  window.addEventListener("keydown", check);
+  window.addEventListener("keydown", keyboardEvents);
 
-  function check(e) {
+  function keyboardEvents(e) {
     switch (e.keyCode) {
       case 87:
       case 38:
@@ -131,9 +131,49 @@
     // Define commands
     return {
       "move up": up,
+      "move up to end": function() {
+        txtToSpeech("moving up.");
+        for (let i = 0; i < b.mapHeight; i++) {
+          (function(i) {
+            setTimeout(() => {
+              up();
+            }, 300 * i);
+          })(i);
+        }
+      },
       "move right": right,
+      "move right to end": function() {
+        txtToSpeech("moving right.");
+        for (let i = 0; i < b.mapWidth; i++) {
+          (function(i) {
+            setTimeout(() => {
+              right();
+            }, 300 * i);
+          })(i);
+        }
+      },
       "move down": down,
+      "move down to end": function() {
+        txtToSpeech("moving down.");
+        for (let i = 0; i < b.mapHeight; i++) {
+          (function(i) {
+            setTimeout(() => {
+              down();
+            }, 300 * i);
+          })(i);
+        }
+      },
       "move left": left,
+      "move left to end": function() {
+        txtToSpeech("moving left.");
+        for (let i = 0; i < b.mapWidth; i++) {
+          (function(i) {
+            setTimeout(() => {
+              left();
+            }, 300 * i);
+          })(i);
+        }
+      },
       "new game": function() {
         b.reset(startKey, exitKey, mazeType, useWeights);
       },
@@ -188,9 +228,9 @@
 
   function activateSpeech() {
     if (useSpeech) {
-      txtToSpeech("Voice mode activated. Please give your command.");
       if (annyang) {
-        console.log(annyang.isListening());
+        txtToSpeech("Voice mode activated. Please give your command.");
+
         // Add commands to annyang
         annyang.addCommands(commands());
 

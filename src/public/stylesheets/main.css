@@ -13,7 +13,7 @@
 
 .mymain {
   align-items: center;
-  background-color: black;
+  /* background-color: black; */
   /* border: 1px solid blue; */
   display: flex;
   /* flex-direction: column; */
@@ -21,7 +21,7 @@
   position: fixed;
   top: 150px;
   width: 100vw;
-  z-index: -1;
+  z-index: 1;
 }
 
 .mycanvas {
@@ -31,4 +31,10 @@
   /* left: 20px; */
   /* position: relative; */
   /* top: 20px; */
+}
+
+#background {
+  position: absolute;
+  height: 100vh;
+  z-index: -999999;
 }

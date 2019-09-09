@@ -105,10 +105,10 @@ class Board {
     let start;
     if (newStart === undefined) start = this.start;
     else start = newStart;
-    if (incrementKey !== undefined && !this.useWeights) {
+    if (incrementKey !== undefined) {
       redraw = true;
       oldStart = this.start;
-      if (walkPath === true) {
+      if (walkPath === true && !this.useWeights) {
         this.startKey = incrementKey;
         this.start = this.getCoords(this.startKey);
       } else if (
@@ -129,11 +129,15 @@ class Board {
         // if bombs mode activated, can pass through wall
         this.startKey += incrementKey;
         this.start = this.getCoords(this.startKey);
-        this.randomReply(this.bombsReplies());
+        if (this.g.vertexList[this.startKey].wall > 1) {
+          this.randomReply(this.bombsReplies());
+        }
       } else if (walkPath === true && this.useWeights) {
-        this.startKey += incrementKey;
+        this.startKey = incrementKey;
         this.start = this.getCoords(this.startKey);
-        this.randomReply(this.bombsReplies());
+        if (this.g.vertexList[this.startKey].wall > 1) {
+          this.randomReply(this.bombsReplies());
+        }
       } else return;
     }
     let file;

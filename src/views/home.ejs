@@ -2,24 +2,62 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <!-- bootstrap stylesheet -->
+  <link rel="stylesheet"
+    href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+    crossorigin="anonymous"
+  >
+
+  <!-- annyang javascript -->
+  <script
+    src="//cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"
+  ></script>
+
+  <!-- bootstrap javascript -->
+  <script
+    src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+    integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+    crossorigin="anonymous"
+  ></script>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"
+  ></script>
+  <script
+    src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"
+  ></script>
   <title>Maze Runner</title>
   <link rel="stylesheet" href="/stylesheets/header.css">
   <link rel="stylesheet" href="/stylesheets/main.css">
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 
-  <script src="//cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"></script>
-
-  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 </head>
 <body class="mybody">
+  <canvas id="background"></canvas>
+
   <header class="myheader">
     <h1>Maze Runner</h1>
+
     <div class="choose">
-      <button id="new" type="button" class="btn btn-dark custom-btn">New Game</button>
+      <button
+        id="new"
+        type="button"
+        class="btn btn-dark custom-btn"
+      >
+        New Game
+      </button>
+
       <div class="dropdown space">
-        <button class="btn btn-dark custom-btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <button 
+          class="btn btn-dark custom-btn dropdown-toggle"
+          type="button" id="dropdownMenuButton"
+          data-toggle="dropdown"
+          aria-haspopup="true"
+          aria-expanded="false"
+        >
           Maze Type
         </button>
         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -27,9 +65,24 @@
           <a id="random" class="dropdown-item" href="#">Random</a>
         </div>
       </div>
-      <button id="gacha" type="button" class="btn btn-dark custom-btn space">Gacha</button>
+
+      <button
+        id="gacha"
+        type="button"
+        class="btn btn-dark custom-btn space"
+      >
+        Gacha
+      </button>
+
       <div class="dropdown space">
-        <button class="btn btn-dark custom-btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <button
+          class="btn btn-dark custom-btn dropdown-toggle"
+          type="button"
+          id="dropdownMenuButton"
+          data-toggle="dropdown"
+          aria-haspopup="true"
+          aria-expanded="false"
+        >
           Game Mode
         </button>
         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -37,8 +90,16 @@
           <a id="bombs" class="dropdown-item" href="#">Bombs</a>
         </div>
       </div>
+
       <div class="dropdown">
-        <button class="btn btn-dark custom-btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <button
+          class="btn btn-dark custom-btn dropdown-toggle"
+          type="button"
+          id="dropdownMenuButton"
+          data-toggle="dropdown"
+          aria-haspopup="true"
+          aria-expanded="false"
+        >
           Voice Mode
         </button>
         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -47,10 +108,13 @@
         </div>
       </div>
     </div>
-  </header>
+  </header
+  >
   <main class="mymain">
     <canvas id="canvas" class="mycanvas"></canvas>
   </main>
+
+  <script type="text/javascript" src="/javascript/background.js"></script>
   <script type="text/javascript" src="/javascript/Node.js"></script>
   <script type="text/javascript" src="/javascript/PriorityQueue.js"></script>
   <script type="text/javascript" src="/javascript/WeightedGraph.js"></script>
