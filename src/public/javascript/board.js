@@ -130,12 +130,14 @@ class Board {
         this.startKey += incrementKey;
         this.start = this.getCoords(this.startKey);
         if (this.g.vertexList[this.startKey].wall > 1) {
+          this.blast = true;
           this.randomReply(this.bombsReplies());
         }
       } else if (walkPath === true && this.useWeights) {
         this.startKey = incrementKey;
         this.start = this.getCoords(this.startKey);
         if (this.g.vertexList[this.startKey].wall > 1) {
+          this.blast = true;
           this.randomReply(this.bombsReplies());
         }
       } else return;
@@ -164,13 +166,37 @@ class Board {
           this.ctx.drawImage(image, start.x, start.y);
         };
         break;
+      case "blast":
+        file = "/images/blast.png";
+        image.onload = () => {
+          this.ctx.drawImage(image, start.x, start.y);
+        };
+        break;
       default:
         file = "/images/floor2.png";
         break;
     }
     image.src = file;
-    if (oldStart !== undefined && redraw === true) {
+    if (oldStart !== undefined && redraw === true && !this.useWeights
+    ) {
       this.redraw("floor", undefined, oldStart);
+    } else if (oldStart !== undefined && redraw === true && this.useWeights) {
+      if (this.blast) {
+        // clear player from previous position
+        if (!this.prevBlast) this.redraw("floor", undefined, oldStart);
+        else this.redraw("blast", undefined, oldStart);
+        this.prevBlast = true;
+        // add effect on current location
+        this.redraw("blast", undefined, this.start);
+        this.redraw("player", undefined);
+        this.blast = false;
+      } else {
+        if (this.prevBlast) {
+          this.prevBlast = false;
+          // remove player from blast at last blast location
+          this.redraw("blast", undefined, oldStart);
+        } else this.redraw("floor", undefined, oldStart);
+      }
     }
   }
 
