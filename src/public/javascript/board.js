@@ -108,6 +108,9 @@ class Board {
       if (this.g.vertexList[this.startKey+incrementKey].wall === 1) {
         this.startKey += incrementKey;
         this.start = this.getCoords(this.startKey);
+      } else if (this.useWeights) {
+        this.startKey += incrementKey;
+        this.start = this.getCoords(this.startKey);
       } else return;
     }
     let file;

@@ -1,22 +1,20 @@
 /* global annyang Board */
 
 (function() {
-  // const start = {x: 0, y: 0};
-  // const exit = {x: 90, y: 180};
-  let start;
-  let exit;
+  let startKey;
+  let exitKey;
   let mazeType = "random";
   let useWeights = false;
   let useSpeech = false;
 
-  const b = new Board(start, exit, mazeType, useWeights);
+  const b = new Board(startKey, exitKey, mazeType, useWeights);
   window.addEventListener("resize", () => {
-    b.reset(start, exit, mazeType, useWeights);
+    b.reset(startKey, exitKey, mazeType, useWeights);
   });
 
   const newGame = document.getElementById("new");
   newGame.addEventListener("click", () => {
-    b.reset(start, exit, mazeType, useWeights);
+    b.reset(startKey, exitKey, mazeType, useWeights);
   });
 
   const gacha = document.getElementById("gacha");
@@ -27,25 +25,25 @@
   const recursiveLink = document.getElementById("recursive");
   recursiveLink.addEventListener("click", () => {
     mazeType = "recursive";
-    b.reset(start, exit, mazeType, useWeights);
+    b.reset(startKey, exitKey, mazeType, useWeights);
   });
 
   const randomLink = document.getElementById("random");
   randomLink.addEventListener("click", () => {
     mazeType = "random";
-    b.reset(start, exit, mazeType, useWeights);
+    b.reset(startKey, exitKey, mazeType, useWeights);
   });
 
   const mazeLink = document.getElementById("maze");
   mazeLink.addEventListener("click", () => {
     useWeights = false;
-    b.reset(start, exit, mazeType, useWeights);
+    b.reset(startKey, exitKey, mazeType, useWeights);
   });
 
   const bombsLink = document.getElementById("bombs");
   bombsLink.addEventListener("click", () => {
     useWeights = true;
-    b.reset(start, exit, mazeType, useWeights);
+    b.reset(startKey, exitKey, mazeType, useWeights);
   });
 
   const speechOnLink = document.getElementById("speechOn");
@@ -57,6 +55,7 @@
   const speechOffLink = document.getElementById("speechOff");
   speechOffLink.addEventListener("click", () => {
     useSpeech = false;
+    activateSpeech();
   });
 
   window.addEventListener("keydown", check);
@@ -85,40 +84,32 @@
     if (b.startKey === b.exitKey) {
       setTimeout(() => {
         alert("end game");
-        b.reset(start, exit, mazeType, useWeights);
+        b.reset(startKey, exitKey, mazeType, useWeights);
       }, 200);
     }
   }
 
   function up() {
-    if (!useSpeech) {
-      if (b.start.y > 0) {
-        b.redraw("player", -b.mapWidth);
-      }
+    if (b.start.y > 0) {
+      b.redraw("player", -b.mapWidth);
     }
   }
 
   function right() {
-    if (!useSpeech) {
-      if (b.start.x < b.mapWidth * b.tileWidth - b.tileWidth) {
-        b.redraw("player", 1);
-      }
+    if (b.start.x < b.mapWidth * b.tileWidth - b.tileWidth) {
+      b.redraw("player", 1);
     }
   }
 
   function down() {
-    if (!useSpeech) {
-      if (b.start.y < b.mapHeight * b.tileHeight - b.tileHeight) {
-        b.redraw("player", +b.mapWidth);
-      }
+    if (b.start.y < b.mapHeight * b.tileHeight - b.tileHeight) {
+      b.redraw("player", +b.mapWidth);
     }
   }
 
   function left() {
-    if (!useSpeech) {
-      if (b.start.x > 0) {
-        b.redraw("player", -1);
-      }
+    if (b.start.x > 0) {
+      b.redraw("player", -1);
     }
   }
 
@@ -127,18 +118,34 @@
       if (annyang) {
         // Define commands
         const commands = {
-          up: up(useSpeech),
-          right: right(useSpeech),
-          down: down(useSpeech),
-          left: left(useSpeech),
+          "up": function() {
+            console.log("up");
+            up();
+          },
+          "right": function() {
+            console.log("right");
+            right();
+          },
+          "down": function() {
+            console.log("down");
+            down();
+          },
+          "left": function() {
+            console.log("left");
+            left();
+          },
         };
 
         // Add commands to annyang
         annyang.addCommands(commands);
 
         // Start listening.
-        annyang.start();
+        annyang.start({paused: false});
       }
+    } else {
+      annyang.pause();
     }
   }
+
+  activateSpeech();
 }());
