@@ -2,7 +2,9 @@ class Maze {
   constructor(
     ctx,
     graph,
+    startKey,
     start,
+    exitKey,
     exit,
     mapWidth,
     mapHeight,
@@ -12,7 +14,9 @@ class Maze {
   ) {
     this.ctx = ctx;
     this.g = graph;
+    this.startKey = startKey;
     this.start = start;
+    this.exitKey = exitKey;
     this.exit = exit;
     this.mapWidth = mapWidth;
     this.mapHeight = mapHeight;
@@ -41,6 +45,8 @@ class Maze {
           exit: this.exit,
           wall: this.randomWall(i, j, coords),
           useWeights: this.useWeights,
+          mapWidth: this.mapWidth,
+          tileWidth: this.tileWidth,
         };
         this.world[i][j] = vertex.wall;
         this.g.addVertex(vertex);
@@ -82,7 +88,9 @@ class Maze {
         vertex = {
           ctx: this.ctx,
           coords,
+          startKey: this.startKey,
           start: this.start,
+          exitKey: this.exitKey,
           exit: this.exit,
           wall,
           useWeights: this.useWeights,

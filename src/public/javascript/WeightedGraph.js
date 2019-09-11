@@ -14,7 +14,6 @@ class WeightedGraph {
     this.distances = {};
     this.previous = {};
     this.path = [];
-    this.smallest = undefined;
   }
 
   addVertex(vertex) {
@@ -77,7 +76,8 @@ class WeightedGraph {
     });
   }
 
-  dijkstra(finish, start) {
+  dijkstra(exit, start) {
+    let currentKey;
     if (start !== undefined) {
       this.start = start;
       this.drawGraph();
@@ -85,35 +85,125 @@ class WeightedGraph {
     if (this.searched) this.drawGraph();
     while (this.pq.values.length) {
       const currentNode = this.pq.dequeue();
-      this.smallest = currentNode.key;
+      currentKey = currentNode.key;
       if (
-        this.vertexList[this.smallest].coords.x === finish.x &&
-        this.vertexList[this.smallest].coords.y === finish.y
+        this.vertexList[currentKey].coords.x === exit.x &&
+        this.vertexList[currentKey].coords.y === exit.y
       ) {
-        while (this.previous[this.smallest]) {
-          this.path.push(this.smallest);
-          this.smallest = this.previous[this.smallest];
+        while (this.previous[currentKey]) {
+          this.path.push(currentKey);
+          currentKey = this.previous[currentKey];
+          console.log(this.distances[currentKey]);
         }
         break;
       }
-      if (this.smallest || this.distances[this.smallest] !== Infinity) {
-        for (let i = 0; i < this.adjacencyList[this.smallest].length; i++) {
-          const nextNode = this.adjacencyList[this.smallest][i];
-          const candidate = this.distances[this.smallest] + nextNode.weight;
+      if (currentKey || this.distances[currentKey] !== Infinity) {
+        for (let i = 0; i < this.adjacencyList[currentKey].length; i++) {
+          const nextNode = this.adjacencyList[currentKey][i];
+          const newDistance = this.distances[currentKey] + nextNode.weight;
           const nextNeighbor = nextNode.node;
-          if (candidate < this.distances[nextNode.node]) {
-            this.distances[nextNeighbor] = candidate;
-            this.previous[nextNeighbor] = this.smallest;
+          if (newDistance < this.distances[nextNode.node]) {
+            this.distances[nextNeighbor] = newDistance;
+            this.previous[nextNeighbor] = currentKey;
             this.pq.enqueue(
               nextNeighbor,
-              candidate,
-              this.vertexList[this.smallest]
+              newDistance,
+              this.vertexList[currentKey],
             );
           }
         }
       }
     }
     this.searched = true;
-    return this.path.concat(this.smallest).reverse();
+    return this.path.concat(currentKey).reverse();
+  }
+
+  manhattanDistance(exit, start) {
+    return Math.abs(this.start.x - exit.x) + Math.abs(this.start.y - exit.y);
+  }
+
+  aStar(exit, start) {
+    let currentKey;
+    if (start !== undefined) {
+      this.start = start;
+      this.drawGraph();
+    }
+    if (this.searched) this.drawGraph();
+    while (this.pq.values.length) {
+      const currentNode = this.pq.dequeue();
+      currentKey = currentNode.key;
+      if (
+        this.vertexList[currentKey].coords.x === exit.x &&
+        this.vertexList[currentKey].coords.y === exit.y
+      ) {
+        while (this.previous[currentKey]) {
+          this.path.push(currentKey);
+          currentKey = this.previous[currentKey];
+          console.log(this.distances[currentKey]);
+        }
+        break;
+      }
+      if (currentKey || this.distances[currentKey] !== Infinity) {
+        for (let i = 0; i < this.adjacencyList[currentKey].length; i++) {
+          const nextNode = this.adjacencyList[currentKey][i];
+          const newDistance =
+            this.distances[currentKey] +
+            this.manhattanDistance(exit, this.start);
+          const nextNeighbor = nextNode.node;
+          if (newDistance < this.distances[nextNode.node]) {
+            this.distances[nextNeighbor] = newDistance;
+            this.previous[nextNeighbor] = currentKey;
+            this.pq.enqueue(
+              nextNeighbor,
+              newDistance,
+              this.vertexList[currentKey],
+            );
+          }
+        }
+      }
+    }
+    this.searched = true;
+    return this.path.concat(currentKey).reverse();
+  }
+
+  breathFirstSearch(exit, start) {
+    let currentKey;
+    if (start !== undefined) {
+      this.start = start;
+      this.drawGraph();
+    }
+    if (this.searched) this.drawGraph();
+    while (this.pq.values.length) {
+      const currentNode = this.pq.dequeue();
+      currentKey = currentNode.key;
+      if (
+        this.vertexList[currentKey].coords.x === exit.x &&
+        this.vertexList[currentKey].coords.y === exit.y
+      ) {
+        while (this.previous[currentKey]) {
+          this.path.push(currentKey);
+          currentKey = this.previous[currentKey];
+        }
+        break;
+      }
+      if (currentKey || this.distances[currentKey] !== Infinity) {
+        for (let i = 0; i < this.adjacencyList[currentKey].length; i++) {
+          const nextNode = this.adjacencyList[currentKey][i];
+          const newDistance = this.distances[currentKey];
+          const nextNeighbor = nextNode.node;
+          if (newDistance < this.distances[nextNode.node]) {
+            this.distances[nextNeighbor] = newDistance;
+            this.previous[nextNeighbor] = currentKey;
+            this.pq.enqueue(
+              nextNeighbor,
+              newDistance,
+              this.vertexList[currentKey],
+            );
+          }
+        }
+      }
+    }
+    this.searched = true;
+    return this.path.concat(currentKey).reverse();
   }
 }

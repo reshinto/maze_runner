@@ -2,7 +2,7 @@
 
 class Board {
   constructor(startKey, exitKey, mazeType, useWeights) {
-    this.pathSlots = ["dijkstra"];
+    this.pathSlots = ["dijkstra", "a star", "breath first search"];
     this.c = document.getElementById("canvas");
     this.ctx = this.c.getContext("2d");
     this.reset(startKey, exitKey, mazeType, useWeights);
@@ -39,24 +39,19 @@ class Board {
   setSettings(startKey, exitKey) {
     this.startKey = this.randomKey();
     this.exitKey = this.randomKey();
-    this.start = this.getCoords(this.startKey);
-    this.exit = this.getCoords(this.exitKey);
-    this.g = new WeightedGraph(this.start);
+    if (this.exitKey === this.startKey) {
+      while (this.exitKey === this.startKey) {
+        this.exitKey = this.randomKey();
+      }
+    }
+    this.start = getCoords(this.startKey, this.mapWidth, this.tileWidth);
+    this.exit = getCoords(this.exitKey, this.mapWidth, this.tileWidth);
+    this.g = new WeightedGraph(this.startKey);
     this.path = null;
   }
 
   randomKey() {
     return Math.floor(Math.random() * this.mapWidth * this.mapHeight);
-  }
-
-  getCoords(key) {
-    let yCount = 0;
-    let newKey = key;
-    while (newKey >= this.mapWidth) {
-      yCount++;
-      newKey -= this.mapWidth;
-    }
-    return {x: newKey * this.tileWidth, y: yCount * this.tileHeight};
   }
 
   reset(startKey, exitKey, mazeType, useWeights) {
@@ -81,7 +76,9 @@ class Board {
     const maze = new Maze(
       this.ctx,
       this.g,
+      this.startKey,
       this.start,
+      this.exitKey,
       this.exit,
       this.mapWidth,
       this.mapHeight,
@@ -110,13 +107,13 @@ class Board {
       oldStart = this.start;
       if (walkPath === true && !this.useWeights) {
         this.startKey = incrementKey;
-        this.start = this.getCoords(this.startKey);
+        this.start = getCoords(this.startKey, this.mapWidth, this.tileWidth);
       } else if (
         walkPath === undefined &&
         this.g.vertexList[this.startKey + incrementKey].wall === 1
       ) {
         this.startKey += incrementKey;
-        this.start = this.getCoords(this.startKey);
+        this.start = getCoords(this.startKey, this.mapWidth, this.tileWidth);
       } else if (
         walkPath === undefined &&
         this.g.vertexList[this.startKey + incrementKey].wall > 1 &&
@@ -128,14 +125,14 @@ class Board {
       } else if (walkPath === undefined && this.useWeights) {
         // if bombs mode activated, can pass through wall
         this.startKey += incrementKey;
-        this.start = this.getCoords(this.startKey);
+        this.start = getCoords(this.startKey, this.mapWidth, this.tileWidth);
         if (this.g.vertexList[this.startKey].wall > 1) {
           this.blast = true;
           this.randomReply(this.bombsReplies());
         }
       } else if (walkPath === true && this.useWeights) {
         this.startKey = incrementKey;
-        this.start = this.getCoords(this.startKey);
+        this.start = getCoords(this.startKey, this.mapWidth, this.tileWidth);
         if (this.g.vertexList[this.startKey].wall > 1) {
           this.blast = true;
           this.randomReply(this.bombsReplies());
@@ -173,12 +170,10 @@ class Board {
         };
         break;
       default:
-        file = "/images/floor2.png";
         break;
     }
     image.src = file;
-    if (oldStart !== undefined && redraw === true && !this.useWeights
-    ) {
+    if (oldStart !== undefined && redraw === true && !this.useWeights) {
       this.redraw("floor", undefined, oldStart);
     } else if (oldStart !== undefined && redraw === true && this.useWeights) {
       if (this.blast) {
@@ -191,9 +186,9 @@ class Board {
         this.redraw("player", undefined);
         this.blast = false;
       } else {
+        // remove player from blast at last blast location
         if (this.prevBlast) {
           this.prevBlast = false;
-          // remove player from blast at last blast location
           this.redraw("blast", undefined, oldStart);
         } else this.redraw("floor", undefined, oldStart);
       }
@@ -204,20 +199,28 @@ class Board {
     if (this.chosenPath === undefined) {
       const num = Math.floor(Math.random() * this.pathSlots.length);
       this.chosenPath = this.pathSlots[num];
+      console.log(this.chosenPath);
     }
   }
 
   findPath(start) {
+    this.getPath();
     this.pathDisplayed = true;
     this.path = null;
     switch (this.chosenPath) {
       case "dijkstra":
         this.path = this.g.dijkstra(this.exit, start);
         break;
+      case "a star":
+        this.path = this.g.aStar(this.exit, start);
+        break;
+      case "breath first search":
+        this.path = this.g.breathFirstSearch(this.exit, start);
+        break;
       default:
-        this.path = null;
         break;
     }
+    this.chosenPath = undefined;
     this.drawPath();
     return this.path;
   }
@@ -269,5 +272,21 @@ class Board {
       "I hate you!",
       "Stop killing me!",
     ];
+  }
+}
+
+function getCoords(key, mapWidth, tileWidth) {
+  // return x, y array index if tileWidth is not provided
+  // return x, y actual coordinates if tileWidth is provided
+  if (tileWidth === undefined) {
+    return {
+      x: key % mapWidth,
+      y: Math.floor(key / mapWidth),
+    };
+  } else {
+    return {
+      x: (key % mapWidth) * tileWidth,
+      y: Math.floor(key / mapWidth) * tileWidth,
+    };
   }
 }

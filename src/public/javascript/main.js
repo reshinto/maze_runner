@@ -19,7 +19,6 @@
 
   const gacha = document.getElementById("gacha");
   gacha.addEventListener("click", () => {
-    b.getPath();
     b.findPath(b.start);
   });
 
