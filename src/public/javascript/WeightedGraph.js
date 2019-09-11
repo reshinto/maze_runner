@@ -93,7 +93,6 @@ class WeightedGraph {
         while (this.previous[currentKey]) {
           this.path.push(currentKey);
           currentKey = this.previous[currentKey];
-          console.log(this.distances[currentKey]);
         }
         break;
       }
@@ -139,7 +138,6 @@ class WeightedGraph {
         while (this.previous[currentKey]) {
           this.path.push(currentKey);
           currentKey = this.previous[currentKey];
-          console.log(this.distances[currentKey]);
         }
         break;
       }
