@@ -6,44 +6,65 @@
   let mazeType = "random";
   let useWeights = false;
   let useSpeech = false;
+  let attackSignal = true;
+
 
   const b = new Board(startKey, exitKey, mazeType, useWeights);
+  const interval = setInterval(() => {
+    if (attackSignal === false) {
+      clearInterval(interval);
+    }
+    b.startMonstersAttack();
+  }, 5000);
+
   window.addEventListener("resize", () => {
+    attackSignal = false;
     b.reset(startKey, exitKey, mazeType, useWeights);
+    attackSignal = true;
   });
 
   const newGame = document.getElementById("new");
   newGame.addEventListener("click", () => {
     b.reset(startKey, exitKey, mazeType, useWeights);
+    attackSignal = true;
   });
 
   const gacha = document.getElementById("gacha");
   gacha.addEventListener("click", () => {
+    attackSignal = false;
     b.findPath(b.start);
   });
 
   const recursiveLink = document.getElementById("recursive");
   recursiveLink.addEventListener("click", () => {
+    attackSignal = false;
     mazeType = "recursive";
     b.reset(startKey, exitKey, mazeType, useWeights);
+    attackSignal = true;
   });
 
   const randomLink = document.getElementById("random");
   randomLink.addEventListener("click", () => {
+    attackSignal = false;
     mazeType = "random";
     b.reset(startKey, exitKey, mazeType, useWeights);
+    attackSignal = true;
   });
 
   const mazeLink = document.getElementById("maze");
   mazeLink.addEventListener("click", () => {
+    attackSignal = false;
     useWeights = false;
     b.reset(startKey, exitKey, mazeType, useWeights);
+    attackSignal = true;
   });
 
   const bombsLink = document.getElementById("bombs");
   bombsLink.addEventListener("click", () => {
+    attackSignal = false;
     useWeights = true;
     b.reset(startKey, exitKey, mazeType, useWeights);
+    attackSignal = true;
   });
 
   const speechOnLink = document.getElementById("speechOn");
@@ -174,10 +195,12 @@
         }
       },
       "new game": function() {
+        attackSignal = false;
         b.reset(startKey, exitKey, mazeType, useWeights);
+        attackSignal = true;
       },
       "help": function() {
-        b.getPath();
+        attackSignal = false;
         txtToSpeech(`You have rolled ${b.chosenPath}`);
         b.findPath(b.start);
       },
@@ -202,20 +225,28 @@
         }
       },
       "activate recursive maze": function() {
+        attackSignal = false;
         mazeType = "recursive";
         b.reset(startKey, exitKey, mazeType, useWeights);
+        attackSignal = true;
       },
       "activate random maze": function() {
+        attackSignal = false;
         mazeType = "random";
         b.reset(startKey, exitKey, mazeType, useWeights);
+        attackSignal = true;
       },
       "activate bombs mode": function() {
+        attackSignal = false;
         useWeights = true;
         b.reset(startKey, exitKey, mazeType, useWeights);
+        attackSignal = true;
       },
       "activate maze mode": function() {
+        attackSignal = false;
         useWeights = false;
         b.reset(startKey, exitKey, mazeType, useWeights);
+        attackSignal = true;
       },
       "deactivate voice mode": function() {
         useSpeech = false;

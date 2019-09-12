@@ -13,6 +13,18 @@ class Board {
     this.reset(startKey, exitKey, mazeType, useWeights);
   }
 
+  reset(startKey, exitKey, mazeType, useWeights) {
+    // this.pathDisplayed = false;
+    // this.chosenPath;
+    this.useWeights = useWeights === undefined ? false : useWeights;
+    this.mazeType = mazeType;
+    this.setMainHeight();
+    this.setMapDimensions();
+    this.setCanvasDimensions();
+    this.setSettings(startKey, exitKey);
+    this.draw();
+  }
+
   getHeaderHeight() {
     const header = document.getElementsByTagName("header");
     const headerStr = window
@@ -35,49 +47,72 @@ class Board {
   }
 
   setCanvasDimensions() {
-    this.canvasWidth = this.mapWidth * this.tileWidth;
-    this.canvasHeight = this.mapHeight * this.tileHeight;
-    this.c.height = this.canvasHeight;
-    this.c.width = this.canvasWidth;
+    // this.canvasWidth = this.mapWidth * this.tileWidth;
+    // this.canvasHeight = this.mapHeight * this.tileHeight;
+    this.c.height = this.mapHeight * this.tileHeight;
+    this.c.width = this.mapWidth * this.tileWidth;
   }
 
   setSettings(startKey, exitKey) {
-    this.startKey = this.randomKey();
-    this.exitKey = this.randomKey();
-    if (this.exitKey === this.startKey) {
-      while (this.exitKey === this.startKey) {
-        this.exitKey = this.randomKey();
-      }
-    }
-    this.start = getCoords(this.startKey, this.mapWidth, this.tileWidth);
-    this.exit = getCoords(this.exitKey, this.mapWidth, this.tileWidth);
+    this.setPlayerLocation(startKey);
+    this.setExitLocation(exitKey);
+    this.setMonstersLocation();
     this.g = new WeightedGraph(
       this.ctx,
       this.start,
       this.mapWidth,
       this.tileWidth,
+      this.monsterList,
     );
     this.path = null;
+  }
+
+  setPlayerLocation(startKey) {
+    this.startKey = startKey !== undefined ? startKey : this.randomKey();
+    this.start = getCoords(this.startKey, this.mapWidth, this.tileWidth);
+  }
+
+  setExitLocation(exitKey) {
+    this.exitKey = exitKey !== undefined ? exitKey : this.randomKey();
+    if (this.exitKey === this.startKey) {
+      while (this.exitKey === this.startKey) {
+        this.exitKey = this.randomKey();
+      }
+    }
+    this.exit = getCoords(this.exitKey, this.mapWidth, this.tileWidth);
+  }
+
+  setMonstersLocation() {
+    this.monsterList = [];
+    let monstersMap = {};
+    const randomCoordsArr = [];
+    const randomMonsterNumber = Math.floor(Math.random() * (this.mapWidth / 5));
+    // get monsters position
+    while (randomCoordsArr.length < randomMonsterNumber) {
+      const r = this.randomKey();
+      if (
+        randomCoordsArr.indexOf(r) === -1 &&
+        r !== this.startKey &&
+        r !== this.exitKey
+      ) {
+        randomCoordsArr.push(getCoords(r, this.mapWidth, this.tileWidth));
+      }
+    }
+    // create each monster and assign position
+    for (let i = 0; i < randomMonsterNumber; i++) {
+      monstersMap = {};
+      monstersMap[`monster${i}`] = randomCoordsArr[i];
+      this.monsterList.push(monstersMap);
+    }
   }
 
   randomKey() {
     return Math.floor(Math.random() * this.mapWidth * this.mapHeight);
   }
 
-  reset(startKey, exitKey, mazeType, useWeights) {
-    this.pathDisplayed = false;
-    this.chosenPath;
-    this.useWeights = useWeights === undefined ? false : useWeights;
-    this.mazeType = mazeType;
-    this.setMainHeight();
-    this.setMapDimensions();
-    this.setCanvasDimensions();
-    this.setSettings(startKey, exitKey);
-    this.draw();
-  }
-
   draw() {
     this.drawMaze();
+    // this.redraw("monster");
     this.redraw("exit");
     this.redraw("player");
   }
@@ -90,6 +125,7 @@ class Board {
       this.start,
       this.exitKey,
       this.exit,
+      this.monsterList,
       this.mapWidth,
       this.mapHeight,
       this.tileWidth,
@@ -106,22 +142,20 @@ class Board {
     }
   }
 
-  redraw(type, incrementKey, newStart, walkPath) {
-    let redraw = false;
-    let oldStart;
-    let start;
-    if (newStart === undefined) start = this.start;
-    else start = newStart;
+  updatePlayerMovement(incrementKey, walkPath) {
     if (incrementKey !== undefined) {
-      redraw = true;
-      oldStart = this.start;
+      this.toRedraw = true;
+      this.oldStart = this.start;
       if (walkPath === true && !this.useWeights) {
+        // move player to new location automatically
+        // use mainly for moving all the way to the exit
         this.startKey = incrementKey;
         this.start = getCoords(this.startKey, this.mapWidth, this.tileWidth);
       } else if (
         walkPath === undefined &&
         this.g.vertexList[this.startKey + incrementKey].wall === 1
       ) {
+        // move player to new location manually by 1 step
         this.startKey += incrementKey;
         this.start = getCoords(this.startKey, this.mapWidth, this.tileWidth);
       } else if (
@@ -131,7 +165,6 @@ class Board {
       ) {
         // player hit the wall
         this.randomReply();
-        return;
       } else if (walkPath === undefined && this.useWeights) {
         // if bombs mode activated, can pass through wall
         this.startKey += incrementKey;
@@ -141,15 +174,25 @@ class Board {
           this.randomReply(this.bombsReplies());
         }
       } else if (walkPath === true && this.useWeights) {
+        // walk to path automatically, even through bombs
         this.startKey = incrementKey;
         this.start = getCoords(this.startKey, this.mapWidth, this.tileWidth);
         if (this.g.vertexList[this.startKey].wall > 1) {
           this.blast = true;
           this.randomReply(this.bombsReplies());
         }
-      } else return;
+      }
     }
+  }
+
+  redraw(type, incrementKey, newStart, walkPath) {
+    this.toRedraw = false;
+    this.oldStart;
+    let start;
     let file;
+    if (newStart === undefined) start = this.start;
+    else start = newStart;
+    this.updatePlayerMovement(incrementKey, walkPath);
     const image = new Image();
     switch (type) {
       case "wall":
@@ -179,81 +222,124 @@ class Board {
           this.ctx.drawImage(image, start.x, start.y);
         };
         break;
+      case "monster":
+        file = "/images/monster.png";
+        image.onload = () => {
+          for (let i = 0; i < this.monsterList.length; i++) {
+            this.ctx.drawImage(
+              image,
+              this.monsterList[i][`monster${i}`].x,
+              this.monsterList[i][`monster${i}`].y,
+            );
+          }
+        };
+        break;
       default:
         break;
     }
     image.src = file;
-    if (oldStart !== undefined && redraw === true && !this.useWeights) {
-      this.redraw("floor", undefined, oldStart);
-    } else if (oldStart !== undefined && redraw === true && this.useWeights) {
+    if (this.oldStart !== undefined && this.toRedraw && !this.useWeights) {
+      this.redraw("floor", undefined, this.oldStart);
+      this.redraw("player");
+    } else if (
+      this.oldStart !== undefined &&
+      this.toRedraw &&
+      this.useWeights
+    ) {
       if (this.blast) {
         // clear player from previous position
-        if (!this.prevBlast) this.redraw("floor", undefined, oldStart);
-        else this.redraw("blast", undefined, oldStart);
+        if (!this.prevBlast) this.redraw("floor", undefined, this.oldStart);
+        else this.redraw("blast", undefined, this.oldStart);
         this.prevBlast = true;
         // add effect on current location
         this.redraw("blast", undefined, this.start);
-        this.redraw("player", undefined);
+        this.redraw("player");
         this.blast = false;
       } else {
         // remove player from blast at last blast location
         if (this.prevBlast) {
           this.prevBlast = false;
-          this.redraw("blast", undefined, oldStart);
-        } else this.redraw("floor", undefined, oldStart);
+          this.redraw("blast", undefined, this.oldStart);
+        } else this.redraw("floor", undefined, this.oldStart);
       }
     }
   }
 
-  getPath() {
-    if (this.chosenPath === undefined) {
-      const num = Math.floor(Math.random() * this.pathSlots.length);
-      this.chosenPath = this.pathSlots[num];
-      console.log(this.chosenPath);
+  updateMonsterMovement(i, newKey) {
+    if (newKey !== undefined) {
+      this.oldMonsterStart = this.monsterList[i][`monster${i}`];
+      this.monsterList[i][`monster${i}`] = getCoords(
+        newKey,
+        this.mapWidth,
+        this.tileWidth,
+      );
     }
   }
 
-  findPath(start) {
+  redrawMonster(i, newKey) {
+    const image = new Image();
+    const start = this.monsterList[i][`monster${i}`];
+
+    this.updateMonsterMovement(i, newKey);
+    image.onload = () => {
+      this.ctx.drawImage(image, start.x, start.y);
+    };
+    image.src = "/images/monster.png";
+    this.redraw("floor", undefined, this.oldMonsterStart);
+    // redraw monster at new position
+    if (newKey !== undefined) this.redrawMonster(i);
+  }
+
+  startMonstersAttack() {
+    for (let i = 0; i < this.monsterList.length; i++) {
+      const start = this.monsterList[i][`monster${i}`];
+      const path = this.findPath(start, this.start, true);
+      this.redrawMonster(i, path.pop());
+    }
+  }
+
+  getPath() {
+    // if (this.chosenPath === undefined) {
+    const num = Math.floor(Math.random() * this.pathSlots.length);
+    this.chosenPath = this.pathSlots[num];
+    console.log(this.chosenPath);
+    // }
+  }
+
+  findPath(start, _exit, monsterUse = false) {
     this.getPath();
-    this.pathDisplayed = true;
-    this.path = null;
+    // this.pathDisplayed = true;
+    const exit = _exit === undefined ? this.exit : _exit;
+    let path;
     switch (this.chosenPath) {
       case "dijkstra":
-        this.path = this.g.dijkstra(this.exit, start);
+        path = !monsterUse
+          ? this.g.dijkstra(exit, start)
+          : this.g.dijkstraMonster(exit, start);
         break;
       case "a star":
-        this.path = this.g.aStar(this.exit, start);
+        path = !monsterUse
+          ? this.g.aStar(exit, start)
+          : this.g.aStarMonster(exit, start);
         break;
       case "breath first search":
-        this.path = this.g.breathFirstSearch(this.exit, start);
+        path = !monsterUse
+          ? this.g.breathFirstSearch(exit, start)
+          : this.g.breathFirstSearchMonster(exit, start);
         break;
       case "depth first search":
-        this.path = this.g.depthFirstSearch(this.exit, start);
+        path = !monsterUse
+          ? this.g.depthFirstSearch(exit, start)
+          : this.g.depthFirstSearchMonster(exit, start);
         break;
       default:
         break;
     }
-    this.chosenPath = undefined;
-    this.drawPath();
-    return this.path;
-  }
-
-  drawPath() {
-    // const image = new Image();
-    // image.onload = () => {
-    //   for (let i = 1; i < this.path.length - 1; i++) {
-    //     this.ctx.globalAlpha = 0.4;
-    //     this.ctx.drawImage(
-    //       image,
-    //       this.g.vertexList[this.path[i]].coords.x,
-    //       this.g.vertexList[this.path[i]].coords.y,
-    //     );
-    //     this.ctx.globalAlpha = 1;
-    //   }
-    // };
-    // image.src = "/images/path.png";
+    // this.chosenPath = undefined;
     this.redraw("exit");
     this.redraw("player");
+    if (!monsterUse) this.path = path;
+    return path;
   }
 
   randomReply(type = this.mazeReplies()) {

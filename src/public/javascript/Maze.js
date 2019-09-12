@@ -6,11 +6,12 @@ class Maze {
     start,
     exitKey,
     exit,
+    monsterList,
     mapWidth,
     mapHeight,
     tileWidth,
     tileHeight,
-    useWeights
+    useWeights,
   ) {
     this.ctx = ctx;
     this.g = graph;
@@ -18,6 +19,7 @@ class Maze {
     this.start = start;
     this.exitKey = exitKey;
     this.exit = exit;
+    this.monsterList = monsterList;
     this.mapWidth = mapWidth;
     this.mapHeight = mapHeight;
     this.tileWidth = tileWidth;
@@ -41,9 +43,12 @@ class Maze {
         vertex = {
           ctx: this.ctx,
           coords,
+          startKey: this.startKey,
           start: this.start,
+          exitKey: this.exitKey,
           exit: this.exit,
           wall: this.randomWall(i, j, coords),
+          monsterList: this.monsterList,
           useWeights: this.useWeights,
           mapWidth: this.mapWidth,
           tileWidth: this.tileWidth,
@@ -61,6 +66,15 @@ class Maze {
     wall = Math.random() > 0.75 ? 5 : 1;
     if (coords.x === this.start.x && coords.y === this.start.y) wall = 1;
     if (coords.x === this.exit.x && coords.y === this.exit.y) wall = 1;
+    for (let i = 0; i < this.monsterList.length; i++) {
+      if (
+        coords.x === this.monsterList[i][`monster${i}`].x &&
+        coords.y === this.monsterList[i][`monster${i}`].y
+      ) {
+        wall = 1;
+        break;
+      }
+    }
     return wall;
   }
 
@@ -85,6 +99,14 @@ class Maze {
             : 1;
         if (coords.x === this.start.x && coords.y === this.start.y) wall = 1;
         if (coords.x === this.exit.x && coords.y === this.exit.y) wall = 1;
+        for (let i = 0; i < this.monsterList.length; i++) {
+          if (
+            coords.x === this.monsterList[i][`monster${i}`].x &&
+            coords.y === this.monsterList[i][`monster${i}`].y
+          ) {
+            wall = 1;
+          }
+        }
         vertex = {
           ctx: this.ctx,
           coords,
@@ -93,7 +115,10 @@ class Maze {
           exitKey: this.exitKey,
           exit: this.exit,
           wall,
+          monsterList: this.monsterList,
           useWeights: this.useWeights,
+          mapWidth: this.mapWidth,
+          tileWidth: this.tileWidth,
         };
         this.contents[i][j] = vertex;
         this.world[i][j] = wall;
@@ -156,6 +181,14 @@ class Maze {
         ) {
           current.wall = 1;
         }
+        for (let j = 0; j < current.monsterList.length; j++) {
+          if (
+            current.coords.x === current.monsterList[j][`monster${j}`].x &&
+            current.coords.y === current.monsterList[j][`monster${j}`].y
+          ) {
+            current.wall = 1;
+          }
+        }
       }
       this.drawRecursiveInnerWalls(x1, bisection, y1, y2);
       this.drawRecursiveInnerWalls(bisection, x2, y1, y2);
@@ -202,6 +235,14 @@ class Maze {
         ) {
           current.wall = 1;
         }
+        for (let j = 0; j < current.monsterList.length; j++) {
+          if (
+            current.coords.x === current.monsterList[j][`monster${j}`].x &&
+            current.coords.y === current.monsterList[j][`monster${j}`].y
+          ) {
+            current.wall = 1;
+          }
+        }
       }
       this.drawRecursiveInnerWalls(x1, x2, y1, bisection);
       this.drawRecursiveInnerWalls(x1, x2, bisection, y2);
@@ -219,7 +260,7 @@ class Maze {
         key++;
       }
     }
-    this.g.drawGraph();
+    this.g.drawGraph(this.start);
   }
 
   _addConnections(g, key, w, useW) {

@@ -4,9 +4,10 @@
 }
 
 .mybody {
+  background-color: black;
   height: 100vh;
   margin: 0;
-  /* overflow: hidden; */
+  overflow: hidden;
   padding: 0;
   width: 100vw;
 }
@@ -34,7 +35,7 @@
 }
 
 #background {
-  position: absolute;
   height: 100vh;
+  position: absolute;
   z-index: -999999;
 }

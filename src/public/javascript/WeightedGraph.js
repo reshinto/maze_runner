@@ -1,7 +1,7 @@
 /* global getCoords PriorityQueue */
 
 class WeightedGraph {
-  constructor(ctx, start, mapWidth, tileWidth) {
+  constructor(ctx, start, mapWidth, tileWidth, monsterList) {
     this.ctx = ctx;
     this.vertexList = [];
     this.adjacencyList = {};
@@ -9,6 +9,8 @@ class WeightedGraph {
     this.key = 0;
     this.mapWidth = mapWidth;
     this.tileWidth = tileWidth;
+    this.monsterList = monsterList;
+    this.isAnimating = false;
   }
 
   resetGraph() {
@@ -62,12 +64,12 @@ class WeightedGraph {
     });
   }
 
-  drawGraph() {
+  drawGraph(start) {
     this.resetGraph();
     Object.keys(this.adjacencyList).forEach((key) => {
       if (
-        this.vertexList[key]["coords"].x === this.start.x &&
-        this.vertexList[key]["coords"].y === this.start.y
+        this.vertexList[key]["coords"].x === start.x &&
+        this.vertexList[key]["coords"].y === start.y
       ) {
         this.distances[key] = 0;
         this.pq.enqueue(key, 0, this.vertexList[key]);
@@ -90,8 +92,10 @@ class WeightedGraph {
     }
   }
 
+  // player and monster algorithms are kept separate to prevent clashes
   dijkstra(exit, start) {
-    if (this.searched) this.drawGraph();
+    if (this.searched || start !== undefined) this.drawGraph(start);
+    this.isAnimating = true;
     let currentKey;
     let isAnimating;
     let _ = 0;
@@ -144,6 +148,7 @@ class WeightedGraph {
     const displayPath = this.path.concat(currentKey).reverse();
     const interval = setInterval(() => {
       if (isAnimating === false) {
+        this.isAnimating = false;
         this.animatePath(tempCtx, displayPath);
         clearInterval(interval);
       }
@@ -151,12 +156,68 @@ class WeightedGraph {
     return this.path;
   }
 
+  dijkstraMonster(exit, start) {
+    if (!this.isAnimating) {
+      const pq = new PriorityQueue();
+      const distances = {};
+      const previous = {};
+      let currentKey;
+      const path = [];
+      Object.keys(this.adjacencyList).forEach((key) => {
+        if (
+          this.vertexList[key]["coords"].x === start.x &&
+          this.vertexList[key]["coords"].y === start.y
+        ) {
+          distances[key] = 0;
+          pq.enqueue(key, 0, this.vertexList[key]);
+        } else {
+          distances[key] = Infinity;
+          pq.enqueue(key, Infinity, this.vertexList[key]);
+        }
+        previous[key] = null;
+      });
+      while (pq.values.length) {
+        const currentNode = pq.dequeue();
+        currentKey = currentNode.key;
+        if (
+          this.vertexList[currentKey].coords.x === exit.x &&
+          this.vertexList[currentKey].coords.y === exit.y
+        ) {
+          while (previous[currentKey]) {
+            path.push(currentKey);
+            currentKey = previous[currentKey];
+          }
+          break;
+        }
+        if (distances[currentKey] !== Infinity) {
+          for (let i = 0; i < this.adjacencyList[currentKey].length; i++) {
+            const nextNode = this.adjacencyList[currentKey][i];
+            const newDistance = distances[currentKey] + nextNode.weight;
+            const nextNeighbor = nextNode.node;
+            if (newDistance < distances[nextNode.node]) {
+              distances[nextNeighbor] = newDistance;
+              previous[nextNeighbor] = currentKey;
+              pq.enqueue(
+                nextNeighbor,
+                newDistance,
+                this.vertexList[currentKey],
+              );
+            }
+          }
+        }
+      }
+      return path;
+    }
+    return [start];
+  }
+
   manhattanDistance(exit, start) {
     return Math.abs(start.x - exit.x) + Math.abs(start.y - exit.y);
   }
 
   aStar(exit, start) {
-    if (this.searched) this.drawGraph();
+    if (this.searched || start !== undefined) this.drawGraph(start);
+    this.isAnimating = true;
     let currentKey;
     let isAnimating;
     let _ = 0;
@@ -215,6 +276,7 @@ class WeightedGraph {
     const displayPath = this.path.concat(currentKey).reverse();
     const interval = setInterval(() => {
       if (isAnimating === false) {
+        this.isAnimating = false;
         this.animatePath(tempCtx, displayPath);
         clearInterval(interval);
       }
@@ -222,8 +284,70 @@ class WeightedGraph {
     return this.path;
   }
 
+  aStarMonster(exit, start) {
+    if (!this.isAnimating) {
+      const pq = new PriorityQueue();
+      const distances = {};
+      const previous = {};
+      let currentKey;
+      const path = [];
+      Object.keys(this.adjacencyList).forEach((key) => {
+        if (
+          this.vertexList[key]["coords"].x === start.x &&
+          this.vertexList[key]["coords"].y === start.y
+        ) {
+          distances[key] = 0;
+          pq.enqueue(key, 0, this.vertexList[key]);
+        } else {
+          distances[key] = Infinity;
+          pq.enqueue(key, Infinity, this.vertexList[key]);
+        }
+        previous[key] = null;
+      });
+      while (pq.values.length) {
+        const currentNode = pq.dequeue();
+        currentKey = currentNode.key;
+        if (
+          this.vertexList[currentKey].coords.x === exit.x &&
+          this.vertexList[currentKey].coords.y === exit.y
+        ) {
+          while (previous[currentKey]) {
+            path.push(currentKey);
+            currentKey = previous[currentKey];
+          }
+          break;
+        }
+        if (distances[currentKey] !== Infinity) {
+          for (let i = 0; i < this.adjacencyList[currentKey].length; i++) {
+            const nextNode = this.adjacencyList[currentKey][i];
+            const newDistance =
+              distances[currentKey] +
+              nextNode.weight +
+              this.manhattanDistance(
+                exit,
+                getCoords(nextNode.node, this.mapWidth, this.tileWidth),
+              );
+            const nextNeighbor = nextNode.node;
+            if (newDistance < distances[nextNode.node]) {
+              distances[nextNeighbor] = newDistance;
+              previous[nextNeighbor] = currentKey;
+              pq.enqueue(
+                nextNeighbor,
+                newDistance,
+                this.vertexList[currentKey],
+              );
+            }
+          }
+        }
+      }
+      return path;
+    }
+    return [start];
+  }
+
   breathFirstSearch(exit, start) {
-    if (this.searched) this.drawGraph();
+    if (this.searched || start !== undefined) this.drawGraph(start);
+    this.isAnimating = true;
     let currentKey;
     let isAnimating;
     let _ = 0;
@@ -276,6 +400,7 @@ class WeightedGraph {
     const displayPath = this.path.concat(currentKey).reverse();
     const interval = setInterval(() => {
       if (isAnimating === false) {
+        this.isAnimating = false;
         this.animatePath(tempCtx, displayPath);
         clearInterval(interval);
       }
@@ -283,8 +408,64 @@ class WeightedGraph {
     return this.path;
   }
 
-  // depthFirstSearch(exit, start) {
-  //   if (this.searched) this.drawGraph();
+  breathFirstSearchMonster(exit, start) {
+    if (!this.isAnimating) {
+      const pq = new PriorityQueue();
+      const distances = {};
+      const previous = {};
+      let currentKey;
+      const path = [];
+      Object.keys(this.adjacencyList).forEach((key) => {
+        if (
+          this.vertexList[key]["coords"].x === start.x &&
+          this.vertexList[key]["coords"].y === start.y
+        ) {
+          distances[key] = 0;
+          pq.enqueue(key, 0, this.vertexList[key]);
+        } else {
+          distances[key] = Infinity;
+          pq.enqueue(key, Infinity, this.vertexList[key]);
+        }
+        previous[key] = null;
+      });
+      while (pq.values.length) {
+        const currentNode = pq.dequeue();
+        currentKey = currentNode.key;
+        if (
+          this.vertexList[currentKey].coords.x === exit.x &&
+          this.vertexList[currentKey].coords.y === exit.y
+        ) {
+          while (previous[currentKey]) {
+            path.push(currentKey);
+            currentKey = previous[currentKey];
+          }
+          break;
+        }
+        if (distances[currentKey] !== Infinity) {
+          for (let i = 0; i < this.adjacencyList[currentKey].length; i++) {
+            const nextNode = this.adjacencyList[currentKey][i];
+            const newDistance = distances[currentKey];
+            const nextNeighbor = nextNode.node;
+            if (newDistance < distances[nextNode.node]) {
+              distances[nextNeighbor] = newDistance;
+              previous[nextNeighbor] = currentKey;
+              pq.enqueue(
+                nextNeighbor,
+                newDistance,
+                this.vertexList[currentKey],
+              );
+            }
+          }
+        }
+      }
+      return path;
+    }
+    return [start];
+  }
+
+  // depthFirstSearch(exit, start, monsterUse=false) {
+  //   if (this.searched || start !== undefined) this.drawGraph(start);
+  //   this.isAnimating = true;
   //   let currentKey;
   //   let isAnimating;
   //   let _ = 0;
@@ -294,20 +475,22 @@ class WeightedGraph {
   //     currentKey = currentNode.key;
   //     console.log("top", currentKey);
   //     console.log(this.distances[currentKey]);
-  //     // skip starting node, all walls, and all bombs
-  //     if (_ > 0 && this.vertexList[currentKey].wall === 1) {
-  //       const temp = this.vertexList[currentKey].coords;
-  //       (function(_) {
-  //         setTimeout(() => {
-  //           if (temp.x === exit.x && temp.y === exit.y) {
-  //             isAnimating = false;
-  //           } else {
-  //             redraw("search", tempCtx, temp);
-  //           }
-  //         }, 20 * _);
-  //       })(_);
+  //     if (!monsterUse) {
+  //       // skip starting node, all walls, and all bombs
+  //       if (_ > 0 && this.vertexList[currentKey].wall === 1) {
+  //         const temp = this.vertexList[currentKey].coords;
+  //         (function(_) {
+  //           setTimeout(() => {
+  //             if (temp.x === exit.x && temp.y === exit.y) {
+  //               isAnimating = false;
+  //             } else {
+  //               redraw("search", tempCtx, temp);
+  //             }
+  //           }, 20 * _);
+  //         })(_);
+  //       }
+  //       _++;
   //     }
-  //     _++;
   //     if (
   //       this.vertexList[currentKey].coords.x === exit.x &&
   //       this.vertexList[currentKey].coords.y === exit.y
@@ -339,17 +522,20 @@ class WeightedGraph {
   //   }
   //   const displayPath = this.path.concat(currentKey).reverse();
   //   console.log(this.path);
-  //   const interval = setInterval(() => {
-  //     if (isAnimating === false) {
-  //       this.animatePath(tempCtx, displayPath);
-  //       clearInterval(interval);
-  //     }
-  //   }, 0);
+  //   if (!monsterUse) {
+  //     const interval = setInterval(() => {
+  //       if (isAnimating === false) {
+  //         this.isAnimating = false;
+  //         this.animatePath(tempCtx, displayPath);
+  //         clearInterval(interval);
+  //       }
+  //     }, 0);
+  //   }
   //   return this.path;
   // }
 }
 
-function redraw(type, ctx, start) {
+function redraw(type, ctx, start, monsterList) {
   let file;
   const image = new Image();
   switch (type) {
@@ -384,6 +570,18 @@ function redraw(type, ctx, start) {
       file = "/images/path.png";
       image.onload = () => {
         ctx.drawImage(image, start.x, start.y);
+      };
+      break;
+    case "monster":
+      file = "/images/monster.png";
+      image.onload = () => {
+        for (let i = 0; i < monsterList.length; i++) {
+          ctx.drawImage(
+            image,
+            monsterList[i][`monster${i}`].x,
+            monsterList[i][`monster${i}`].y,
+          );
+        }
       };
       break;
     default:
