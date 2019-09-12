@@ -2,7 +2,12 @@
 
 class Board {
   constructor(startKey, exitKey, mazeType, useWeights) {
-    this.pathSlots = ["dijkstra", "a star", "breath first search"];
+    this.pathSlots = [
+      "dijkstra",
+      "a star",
+      "breath first search",
+      // "depth first search",
+    ];
     this.c = document.getElementById("canvas");
     this.ctx = this.c.getContext("2d");
     this.reset(startKey, exitKey, mazeType, useWeights);
@@ -46,7 +51,12 @@ class Board {
     }
     this.start = getCoords(this.startKey, this.mapWidth, this.tileWidth);
     this.exit = getCoords(this.exitKey, this.mapWidth, this.tileWidth);
-    this.g = new WeightedGraph(this.startKey);
+    this.g = new WeightedGraph(
+      this.ctx,
+      this.start,
+      this.mapWidth,
+      this.tileWidth,
+    );
     this.path = null;
   }
 
@@ -217,6 +227,9 @@ class Board {
       case "breath first search":
         this.path = this.g.breathFirstSearch(this.exit, start);
         break;
+      case "depth first search":
+        this.path = this.g.depthFirstSearch(this.exit, start);
+        break;
       default:
         break;
     }
@@ -226,19 +239,19 @@ class Board {
   }
 
   drawPath() {
-    const image = new Image();
-    image.onload = () => {
-      for (let i = 1; i < this.path.length - 1; i++) {
-        this.ctx.globalAlpha = 0.4;
-        this.ctx.drawImage(
-          image,
-          this.g.vertexList[this.path[i]].coords.x,
-          this.g.vertexList[this.path[i]].coords.y,
-        );
-        this.ctx.globalAlpha = 1;
-      }
-    };
-    image.src = "/images/path.png";
+    // const image = new Image();
+    // image.onload = () => {
+    //   for (let i = 1; i < this.path.length - 1; i++) {
+    //     this.ctx.globalAlpha = 0.4;
+    //     this.ctx.drawImage(
+    //       image,
+    //       this.g.vertexList[this.path[i]].coords.x,
+    //       this.g.vertexList[this.path[i]].coords.y,
+    //     );
+    //     this.ctx.globalAlpha = 1;
+    //   }
+    // };
+    // image.src = "/images/path.png";
     this.redraw("exit");
     this.redraw("player");
   }

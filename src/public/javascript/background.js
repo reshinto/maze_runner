@@ -89,4 +89,8 @@
   }
 
   animate();
+
+  window.addEventListener("resize", () => {
+    animate();
+  });
 }());

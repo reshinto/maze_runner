@@ -64,7 +64,7 @@ class Maze {
     return wall;
   }
 
-
+  // Recursive Backtracker Algorithm
   drawRecursiveMap() {
     let coords;
     let vertex;
