@@ -12,35 +12,22 @@
 h1 {
   /* border: 1px solid blue; */
   color: #cd853f;
-  position: absolute;
-  text-align: center;
+  /* position: absolute; */
+  /* text-align: center; */
   text-transform: uppercase;
-  top: 25px;
-  width: 100vw;
+  /* top: 25px; */
+  /* width: 100vw; */
 }
 
-.choose {
-  /* border: 1px solid blue; */
-  bottom: 5px;
-  display: flex;
-  justify-content: center;
-  position: absolute;
-  width: 100vw;
-}
-
-.btn-dark.custom-btn,
-.btn-dark.custom-btn:hover,
-.btn-dark.custom-btn:active,
-.btn-dark.custom-btn:visited,
-.btn-dark.custom-btn:focus,
-.btn-dark.custom-btn:active:focus {
-  background-color: black;
-  border-color: black;
+.text {
   color: #cd853f;
   text-transform: uppercase;
 }
 
-.space {
-  margin-left: 10px;
-  margin-right: 10px;
+.nav-custom {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.navbar-toggler-icon button span {
+  color: #cd853f;
 }

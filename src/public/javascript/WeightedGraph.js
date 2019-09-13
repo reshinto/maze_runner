@@ -93,7 +93,7 @@ class WeightedGraph {
   }
 
   // player and monster algorithms are kept separate to prevent clashes
-  dijkstra(exit, start) {
+  dijkstra(exit, start, animateOff=false) {
     if (this.searched || start !== undefined) this.drawGraph(start);
     this.isAnimating = true;
     let currentKey;
@@ -104,7 +104,7 @@ class WeightedGraph {
       const currentNode = this.pq.dequeue();
       currentKey = currentNode.key;
       // skip starting node, all walls, and all bombs
-      if (_ > 0 && this.vertexList[currentKey].wall === 1) {
+      if (_ > 0 && this.vertexList[currentKey].wall === 1 && !animateOff) {
         const temp = this.vertexList[currentKey].coords;
         (function(_) {
           setTimeout(() => {
@@ -146,6 +146,9 @@ class WeightedGraph {
       }
     }
     const displayPath = this.path.concat(currentKey).reverse();
+    if (animateOff) {
+      isAnimating = false;
+    }
     const interval = setInterval(() => {
       if (isAnimating === false) {
         this.isAnimating = false;
@@ -153,7 +156,7 @@ class WeightedGraph {
         clearInterval(interval);
       }
     }, 0);
-    return this.path;
+    return displayPath;
   }
 
   dijkstraMonster(exit, start) {
@@ -215,7 +218,7 @@ class WeightedGraph {
     return Math.abs(start.x - exit.x) + Math.abs(start.y - exit.y);
   }
 
-  aStar(exit, start) {
+  aStar(exit, start, animateOff=false) {
     if (this.searched || start !== undefined) this.drawGraph(start);
     this.isAnimating = true;
     let currentKey;
@@ -226,7 +229,7 @@ class WeightedGraph {
       const currentNode = this.pq.dequeue();
       currentKey = currentNode.key;
       // skip starting node, all walls, and all bombs
-      if (_ > 0 && this.vertexList[currentKey].wall === 1) {
+      if (_ > 0 && this.vertexList[currentKey].wall === 1 && !animateOff) {
         const temp = this.vertexList[currentKey].coords;
         (function(_) {
           setTimeout(() => {
@@ -274,6 +277,9 @@ class WeightedGraph {
       }
     }
     const displayPath = this.path.concat(currentKey).reverse();
+    if (animateOff) {
+      isAnimating = false;
+    }
     const interval = setInterval(() => {
       if (isAnimating === false) {
         this.isAnimating = false;
@@ -281,7 +287,7 @@ class WeightedGraph {
         clearInterval(interval);
       }
     }, 0);
-    return this.path;
+    return displayPath;
   }
 
   aStarMonster(exit, start) {
@@ -345,7 +351,7 @@ class WeightedGraph {
     return [start];
   }
 
-  breathFirstSearch(exit, start) {
+  breathFirstSearch(exit, start, animateOff=false) {
     if (this.searched || start !== undefined) this.drawGraph(start);
     this.isAnimating = true;
     let currentKey;
@@ -356,7 +362,7 @@ class WeightedGraph {
       const currentNode = this.pq.dequeue();
       currentKey = currentNode.key;
       // skip starting node, all walls, and all bombs
-      if (_ > 0 && this.vertexList[currentKey].wall === 1) {
+      if (_ > 0 && this.vertexList[currentKey].wall === 1 && !animateOff) {
         const temp = this.vertexList[currentKey].coords;
         (function(_) {
           setTimeout(() => {
@@ -398,6 +404,9 @@ class WeightedGraph {
       }
     }
     const displayPath = this.path.concat(currentKey).reverse();
+    if (animateOff) {
+      isAnimating = false;
+    }
     const interval = setInterval(() => {
       if (isAnimating === false) {
         this.isAnimating = false;
@@ -405,7 +414,7 @@ class WeightedGraph {
         clearInterval(interval);
       }
     }, 0);
-    return this.path;
+    return displayPath;
   }
 
   breathFirstSearchMonster(exit, start) {
@@ -463,7 +472,7 @@ class WeightedGraph {
     return [start];
   }
 
-  // depthFirstSearch(exit, start, monsterUse=false) {
+  // depthFirstSearch(exit, start, animateOff=false) {
   //   if (this.searched || start !== undefined) this.drawGraph(start);
   //   this.isAnimating = true;
   //   let currentKey;
@@ -549,7 +558,7 @@ function redraw(type, ctx, start, monsterList) {
       };
       break;
     case "floor":
-      file = "/images/floor2.png";
+      file = "/images/floor.png";
       image.onload = () => {
         ctx.drawImage(image, start.x, start.y);
       };

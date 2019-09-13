@@ -34,7 +34,7 @@
   /* top: 20px; */
 }
 
-#background {
+.backgroundAnimation {
   height: 100vh;
   position: absolute;
   z-index: -999999;

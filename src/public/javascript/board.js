@@ -211,7 +211,7 @@ class Board {
         };
         break;
       case "floor":
-        file = "/images/floor2.png";
+        file = "/images/floor.png";
         image.onload = () => {
           this.ctx.drawImage(image, start.x, start.y);
         };
@@ -291,6 +291,7 @@ class Board {
   }
 
   startMonstersAttack() {
+    this.getPath();
     for (let i = 0; i < this.monsterList.length; i++) {
       const start = this.monsterList[i][`monster${i}`];
       const path = this.findPath(start, this.start, true);
@@ -306,30 +307,29 @@ class Board {
     // }
   }
 
-  findPath(start, _exit, monsterUse = false) {
-    this.getPath();
+  findPath(start, _exit, monsterUse = false, animateOff=false) {
     // this.pathDisplayed = true;
     const exit = _exit === undefined ? this.exit : _exit;
     let path;
     switch (this.chosenPath) {
       case "dijkstra":
         path = !monsterUse
-          ? this.g.dijkstra(exit, start)
+          ? this.g.dijkstra(exit, start, animateOff)
           : this.g.dijkstraMonster(exit, start);
         break;
       case "a star":
         path = !monsterUse
-          ? this.g.aStar(exit, start)
+          ? this.g.aStar(exit, start, animateOff)
           : this.g.aStarMonster(exit, start);
         break;
       case "breath first search":
         path = !monsterUse
-          ? this.g.breathFirstSearch(exit, start)
+          ? this.g.breathFirstSearch(exit, start, animateOff)
           : this.g.breathFirstSearchMonster(exit, start);
         break;
       case "depth first search":
         path = !monsterUse
-          ? this.g.depthFirstSearch(exit, start)
+          ? this.g.depthFirstSearch(exit, start, animateOff)
           : this.g.depthFirstSearchMonster(exit, start);
         break;
       default:

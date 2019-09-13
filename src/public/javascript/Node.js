@@ -12,7 +12,7 @@ class Node {
         this.vertex.coords.y,
       );
     };
-    image.src = "/images/floor2.png";
+    image.src = "/images/floor.png";
 
     if (this.vertex.wall >= 2) {
       const image2 = new Image();

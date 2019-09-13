@@ -7,64 +7,67 @@
   let useWeights = false;
   let useSpeech = false;
   let attackSignal = true;
+  let pathDisplayed = false;
 
 
   const b = new Board(startKey, exitKey, mazeType, useWeights);
   const interval = setInterval(() => {
     if (attackSignal === false) {
+      b.findPath(b.start);
       clearInterval(interval);
     }
     b.startMonstersAttack();
   }, 5000);
 
   window.addEventListener("resize", () => {
-    attackSignal = false;
     b.reset(startKey, exitKey, mazeType, useWeights);
-    attackSignal = true;
   });
 
   const newGame = document.getElementById("new");
   newGame.addEventListener("click", () => {
+    attackSignal = false;
     b.reset(startKey, exitKey, mazeType, useWeights);
-    attackSignal = true;
+    setTimeout(()=>{
+      attackSignal = true;
+      const interval = setInterval(() => {
+        if (attackSignal === false) {
+          b.findPath(b.start);
+          clearInterval(interval);
+        }
+        b.startMonstersAttack();
+      }, 5000);
+    }, 5000);
   });
 
   const gacha = document.getElementById("gacha");
   gacha.addEventListener("click", () => {
     attackSignal = false;
-    b.findPath(b.start);
+    b.getPath();
+    txtToSpeech(`You have rolled ${b.chosenPath}`);
   });
 
   const recursiveLink = document.getElementById("recursive");
   recursiveLink.addEventListener("click", () => {
-    attackSignal = false;
     mazeType = "recursive";
     b.reset(startKey, exitKey, mazeType, useWeights);
-    attackSignal = true;
   });
 
   const randomLink = document.getElementById("random");
   randomLink.addEventListener("click", () => {
-    attackSignal = false;
     mazeType = "random";
     b.reset(startKey, exitKey, mazeType, useWeights);
-    attackSignal = true;
   });
 
   const mazeLink = document.getElementById("maze");
   mazeLink.addEventListener("click", () => {
-    attackSignal = false;
     useWeights = false;
     b.reset(startKey, exitKey, mazeType, useWeights);
-    attackSignal = true;
   });
 
   const bombsLink = document.getElementById("bombs");
   bombsLink.addEventListener("click", () => {
-    attackSignal = false;
     useWeights = true;
     b.reset(startKey, exitKey, mazeType, useWeights);
-    attackSignal = true;
   });
 
   const speechOnLink = document.getElementById("speechOn");
@@ -201,12 +204,14 @@
       },
       "help": function() {
         attackSignal = false;
+        b.getPath();
         txtToSpeech(`You have rolled ${b.chosenPath}`);
-        b.findPath(b.start);
+        // b.findPath(b.start);
+        pathDisplayed = true;
       },
       "end game": function() {
-        if (b.pathDisplayed === true) {
-          const path = b.findPath(b.start);
+        if (pathDisplayed === true) {
+          const path = b.findPath(b.start, undefined, false, true);
           for (let i = 0; i < path.length; i++) {
             (function(i) {
               setTimeout(() => {
