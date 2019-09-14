@@ -36,15 +36,19 @@
   <link rel="stylesheet" href="/stylesheets/main.css">
 
 </head>
-<body class="mybody">
+<body
+  class="mybody"
+  data-toggle="collapse"
+  data-target="#navbarCollapse"
+  >
   <canvas id="background" class="backgroundAnimation">
     Your browser does not support the HTML5 Canvas element.
   </canvas>
 
   <nav class="navbar fixed-top navbar-expand-lg navbar-dark nav-custom">
-      <a class="navbar-brand" href="#"><h1>Maze Runner</h1></a>
+      <a class="navbar-brand"><h2>Maze Runner</h2></a>
     <!-- creates hamburger icon during small screen -->
-    <button class="navbar-toggler"
+    <button class="icon-custom navbar-toggler"
       type="button"
       data-toggle="collapse"
       data-target="#navbarCollapse"
@@ -56,7 +60,11 @@
     </button>
     <div id="navbarCollapse" class="collapse navbar-collapse">
       <ul class="navbar-nav mr-auto">
-          <li class="nav-item">
+          <li
+            class="nav-item"
+            data-toggle="collapse"
+            data-target="#navbarCollapse"
+          >
             <a id="new" class="nav-link" href="#">
               <span class="text">
                 New Game
@@ -64,7 +72,11 @@
             </a>
           </li>
 
-          <li class="nav-item">
+          <li
+            class="nav-item"
+            data-toggle="collapse"
+            data-target="#navbarCollapse"
+          >
             <a id="gacha" class="nav-link" href="#">
               <span class="text">
                 Gacha
@@ -75,8 +87,20 @@
       </ul>
       <ul class="navbar-nav">
           <!-- all items in list will be pushed right -->
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <li
+            class="nav-item dropdown"
+            data-toggle="collapse"
+            data-target="#navbarCollapse"
+          >
+            <a
+              class="nav-link dropdown-toggle"
+              href="#"
+              id="navbarDropdownMenuLink"
+              role="button"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
               <span class="text">Maze Type</span>
             </a>
             <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
@@ -86,8 +110,20 @@
             </a>
           </li>
 
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <li
+            class="nav-item dropdown"
+            data-toggle="collapse"
+            data-target="#navbarCollapse"
+          >
+            <a
+              class="nav-link dropdown-toggle"
+              href="#"
+              id="navbarDropdownMenuLink"
+              role="button"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
               <span class="text">
                 Game Mode
               </span>
@@ -98,8 +134,20 @@
             </div>
           </li>
 
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <li
+            class="nav-item dropdown"
+            data-toggle="collapse"
+            data-target="#navbarCollapse"
+          >
+            <a
+              class="nav-link dropdown-toggle"
+              href="#"
+              id="navbarDropdownMenuLink"
+              role="button"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
               <span class="text">
                 Voice Mode
               </span>

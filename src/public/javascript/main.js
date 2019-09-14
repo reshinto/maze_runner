@@ -8,16 +8,16 @@
   let useSpeech = false;
   let attackSignal = true;
   let pathDisplayed = false;
+  const delay = 1000;
 
 
   const b = new Board(startKey, exitKey, mazeType, useWeights);
   const interval = setInterval(() => {
     if (attackSignal === false) {
-      b.findPath(b.start);
       clearInterval(interval);
     }
     b.startMonstersAttack();
-  }, 5000);
+  }, delay);
 
   window.addEventListener("resize", () => {
     b.reset(startKey, exitKey, mazeType, useWeights);
@@ -31,19 +31,20 @@
       attackSignal = true;
       const interval = setInterval(() => {
         if (attackSignal === false) {
-          b.findPath(b.start);
           clearInterval(interval);
         }
         b.startMonstersAttack();
-      }, 5000);
-    }, 5000);
+      }, delay);
+    }, delay);
   });
 
   const gacha = document.getElementById("gacha");
   gacha.addEventListener("click", () => {
     attackSignal = false;
-    b.getPath();
-    txtToSpeech(`You have rolled ${b.chosenPath}`);
+    setTimeout(()=>{
+      txtToSpeech(`You have rolled ${b.chosenPath}`);
+      b.findPath(b.start);
+    }, delay);
   });
 
   const recursiveLink = document.getElementById("recursive");
@@ -109,6 +110,7 @@
       setTimeout(() => {
         alert("end game");
         b.reset(startKey, exitKey, mazeType, useWeights);
+        attackSignal = true;
       }, 200);
     }
   }
@@ -204,9 +206,10 @@
       },
       "help": function() {
         attackSignal = false;
-        b.getPath();
-        txtToSpeech(`You have rolled ${b.chosenPath}`);
-        // b.findPath(b.start);
+        setTimeout(()=>{
+          txtToSpeech(`You have rolled ${b.chosenPath}`);
+          b.findPath(b.start);
+        }, delay);
         pathDisplayed = true;
       },
       "end game": function() {
@@ -220,6 +223,13 @@
                   setTimeout(() => {
                     alert("end game");
                     b.reset(startKey, exitKey, mazeType, useWeights);
+                    attackSignal = true;
+                    const interval = setInterval(() => {
+                      if (attackSignal === false) {
+                        clearInterval(interval);
+                      }
+                      b.startMonstersAttack();
+                    }, delay);
                   }, 200);
                 }
               }, 300 * i);

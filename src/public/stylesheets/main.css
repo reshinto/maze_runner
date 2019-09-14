@@ -14,10 +14,7 @@
 
 .mymain {
   align-items: center;
-  /* background-color: black; */
-  /* border: 1px solid blue; */
   display: flex;
-  /* flex-direction: column; */
   justify-content: center;
   position: fixed;
   top: 150px;
@@ -26,12 +23,7 @@
 }
 
 .mycanvas {
-  /* background-color: cyan; */
-  /* background-size: 100%; */
   border: 5px solid gray;
-  /* left: 20px; */
-  /* position: relative; */
-  /* top: 20px; */
 }
 
 .backgroundAnimation {

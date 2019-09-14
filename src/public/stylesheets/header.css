@@ -1,7 +1,4 @@
 .myheader {
-  /* border: 1px solid red; */
-  /* background-color: #8b4513; */
-  /* background-color: black; */
   height: 150px;
   position: fixed;
   top: 0;
@@ -9,14 +6,9 @@
   z-index: 2;
 }
 
-h1 {
-  /* border: 1px solid blue; */
+h2 {
   color: #cd853f;
-  /* position: absolute; */
-  /* text-align: center; */
   text-transform: uppercase;
-  /* top: 25px; */
-  /* width: 100vw; */
 }
 
 .text {
@@ -30,4 +22,30 @@ h1 {
 
 .navbar-toggler-icon button span {
   color: #cd853f;
+}
+
+.dropdown-item {
+  background-color: rgba(0, 0, 0, 0);
+  color: #cd853f;
+}
+
+.dropdown-item:hover {
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #cd853f;
+}
+
+.dropdown-menu {
+  background-color: rgba(0, 0, 0, 0);
+}
+
+.icon-custom.navbar-toggler .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(205, 133, 63, 1)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 8h24M4 16h24M4 24h24'/%3E%3C/svg%3E");
+}
+
+.icon-custom.navbar-toggler {
+  border-color: rgb(205, 133, 63);
+}
+
+.icon-custom.navbar-toggler:focus {
+  outline-color: #cd853f;
 }

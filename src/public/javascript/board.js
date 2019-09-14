@@ -84,6 +84,8 @@ class Board {
 
   setMonstersLocation() {
     this.monsterList = [];
+    this.monsterMovementType;
+    this.monstersPathMap = {};
     let monstersMap = {};
     const randomCoordsArr = [];
     const randomMonsterNumber = Math.floor(Math.random() * (this.mapWidth / 5));
@@ -222,18 +224,6 @@ class Board {
           this.ctx.drawImage(image, start.x, start.y);
         };
         break;
-      case "monster":
-        file = "/images/monster.png";
-        image.onload = () => {
-          for (let i = 0; i < this.monsterList.length; i++) {
-            this.ctx.drawImage(
-              image,
-              this.monsterList[i][`monster${i}`].x,
-              this.monsterList[i][`monster${i}`].y,
-            );
-          }
-        };
-        break;
       default:
         break;
     }
@@ -291,11 +281,22 @@ class Board {
   }
 
   startMonstersAttack() {
-    this.getPath();
+    if (this.monsterMovementType === undefined) {
+      this.getPath();
+      this.monsterMovementType = this.chosenPath;
+    }
     for (let i = 0; i < this.monsterList.length; i++) {
       const start = this.monsterList[i][`monster${i}`];
-      const path = this.findPath(start, this.start, true);
-      this.redrawMonster(i, path.pop());
+      if (Object.entries(this.monstersPathMap).length === 0) {
+        this.monstersPathMap[i] = this.findPath(start, this.start, true);
+      } else if (this.monstersPathMap[i] === undefined) {
+        this.monstersPathMap[i] = this.findPath(start, this.start, true);
+      }
+      if (this.monstersPathMap[i].length === 0) {
+        this.monstersPathMap[i] = this.findPath(start, this.start, true);
+      }
+      this.redrawMonster(i, this.monstersPathMap[i].pop());
+      this.redraw("floor", undefined, this.oldMonsterStart);
     }
   }
 
@@ -307,7 +308,7 @@ class Board {
     // }
   }
 
-  findPath(start, _exit, monsterUse = false, animateOff=false) {
+  findPath(start, _exit, monsterUse = false, animateOff = false) {
     // this.pathDisplayed = true;
     const exit = _exit === undefined ? this.exit : _exit;
     let path;
