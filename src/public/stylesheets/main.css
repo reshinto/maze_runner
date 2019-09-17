@@ -31,3 +31,13 @@
   position: absolute;
   z-index: -999999;
 }
+
+.slot {
+  background-color: black;
+  color: white;
+  /* height: 100px; */
+  position: absolute;
+  /* width: 300px; */
+  z-index: 2;
+  top: 10px;
+}

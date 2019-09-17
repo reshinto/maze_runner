@@ -351,6 +351,7 @@ class WeightedGraph {
     return [start];
   }
 
+  // TODO: does not seems to be working properly
   breathFirstSearch(exit, start, animateOff=false) {
     if (this.searched || start !== undefined) this.drawGraph(start);
     this.isAnimating = true;
@@ -417,6 +418,7 @@ class WeightedGraph {
     return displayPath;
   }
 
+  // TODO: does not seems to be working properly
   breathFirstSearchMonster(exit, start) {
     if (!this.isAnimating) {
       const pq = new PriorityQueue();
@@ -472,76 +474,73 @@ class WeightedGraph {
     return [start];
   }
 
-  // depthFirstSearch(exit, start, animateOff=false) {
-  //   if (this.searched || start !== undefined) this.drawGraph(start);
-  //   this.isAnimating = true;
-  //   let currentKey;
-  //   let isAnimating;
-  //   let _ = 0;
-  //   const tempCtx = this.ctx;
-  //   while (this.pq.values.length) {
-  //     const currentNode = this.pq.dequeue();
-  //     currentKey = currentNode.key;
-  //     console.log("top", currentKey);
-  //     console.log(this.distances[currentKey]);
-  //     if (!monsterUse) {
-  //       // skip starting node, all walls, and all bombs
-  //       if (_ > 0 && this.vertexList[currentKey].wall === 1) {
-  //         const temp = this.vertexList[currentKey].coords;
-  //         (function(_) {
-  //           setTimeout(() => {
-  //             if (temp.x === exit.x && temp.y === exit.y) {
-  //               isAnimating = false;
-  //             } else {
-  //               redraw("search", tempCtx, temp);
-  //             }
-  //           }, 20 * _);
-  //         })(_);
-  //       }
-  //       _++;
-  //     }
-  //     if (
-  //       this.vertexList[currentKey].coords.x === exit.x &&
-  //       this.vertexList[currentKey].coords.y === exit.y
-  //     ) {
-  //       while (this.previous[currentKey]) {
-  //         this.path.push(currentKey);
-  //         currentKey = this.previous[currentKey];
-  //       }
-  //       this.searched = true;
-  //       break;
-  //     }
-  //     if (this.distances[currentKey] !== Infinity) {
-  //       console.log("bottom", currentKey);
-  //       for (let i = 0; i < this.adjacencyList[currentKey].length; i++) {
-  //         const nextNode = this.adjacencyList[currentKey][i];
-  //         const newDistance = this.distances[currentKey];
-  //         const nextNeighbor = nextNode.node;
-  //         if (newDistance < this.distances[nextNode.node]) {
-  //           this.distances[nextNeighbor] = newDistance;
-  //           this.previous[nextNeighbor] = currentKey;
-  //           this.pq.enqueue(
-  //             nextNeighbor,
-  //             newDistance,
-  //             this.vertexList[currentKey],
-  //           );
-  //         }
-  //       }
-  //     }
-  //   }
-  //   const displayPath = this.path.concat(currentKey).reverse();
-  //   console.log(this.path);
-  //   if (!monsterUse) {
-  //     const interval = setInterval(() => {
-  //       if (isAnimating === false) {
-  //         this.isAnimating = false;
-  //         this.animatePath(tempCtx, displayPath);
-  //         clearInterval(interval);
-  //       }
-  //     }, 0);
-  //   }
-  //   return this.path;
-  // }
+  // TODO: Not working
+  depthFirstSearch(exit, start, animateOff=false) {
+    if (this.searched || start !== undefined) this.drawGraph(start);
+    this.isAnimating = true;
+    let currentKey;
+    let isAnimating;
+    let _ = 0;
+    const tempCtx = this.ctx;
+    while (this.pq.values.length) {
+      const currentNode = this.pq.dequeue();
+      currentKey = currentNode.key;
+      // skip starting node, all walls, and all bombs
+      if (_ > 0 && this.vertexList[currentKey].wall === 1 && !animateOff) {
+        const temp = this.vertexList[currentKey].coords;
+        (function(_) {
+          setTimeout(() => {
+            if (temp.x === exit.x && temp.y === exit.y) {
+              isAnimating = false;
+            } else {
+              redraw("search", tempCtx, temp);
+            }
+          }, 20 * _);
+        })(_);
+      }
+      _++;
+      if (
+        this.vertexList[currentKey].coords.x === exit.x &&
+        this.vertexList[currentKey].coords.y === exit.y
+      ) {
+        while (this.previous[currentKey]) {
+          this.path.push(currentKey);
+          currentKey = this.previous[currentKey];
+        }
+        this.searched = true;
+        break;
+      }
+      if (this.distances[currentKey] !== Infinity) {
+        for (let i = 0; i < this.adjacencyList.length; i++) {
+          const nextNode = this.adjacencyList[currentKey][i];
+          const newDistance = this.distances[currentKey];
+          const nextNeighbor = nextNode.node;
+          if (newDistance < this.distances[nextNode.node]) {
+            this.distances[nextNeighbor] = newDistance;
+            this.previous[nextNeighbor] = currentKey;
+            this.pq.enqueue(
+              nextNeighbor,
+              newDistance,
+              this.vertexList[currentKey],
+            );
+          }
+        }
+      }
+    }
+    const displayPath = this.path.concat(currentKey).reverse();
+    if (animateOff) {
+      isAnimating = false;
+    }
+    const interval = setInterval(() => {
+      if (isAnimating === false) {
+        this.isAnimating = false;
+        this.animatePath(tempCtx, displayPath);
+        clearInterval(interval);
+      }
+    }, 0);
+    console.log(displayPath);
+    return displayPath;
+  }
 }
 
 function redraw(type, ctx, start, monsterList) {

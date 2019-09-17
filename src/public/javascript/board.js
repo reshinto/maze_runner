@@ -6,7 +6,7 @@ class Board {
       "dijkstra",
       "a star",
       "breath first search",
-      // "depth first search",
+      "depth first search",
     ];
     this.c = document.getElementById("canvas");
     this.ctx = this.c.getContext("2d");

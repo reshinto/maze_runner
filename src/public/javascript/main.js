@@ -8,10 +8,16 @@
   let useSpeech = false;
   let attackSignal = true;
   let pathDisplayed = false;
+  let isRolled = false;
   const delay = 1000;
-
-
+  const rollDelay = 4000;
+  const slotC = document.getElementById("slot");
+  slotC.style.visibility = "hidden";
+  const slotCtx = slotC.getContext("2d");
   const b = new Board(startKey, exitKey, mazeType, useWeights);
+
+
+  // Window and Navbar Events
   const interval = setInterval(() => {
     if (attackSignal === false) {
       clearInterval(interval);
@@ -26,6 +32,7 @@
   const newGame = document.getElementById("new");
   newGame.addEventListener("click", () => {
     attackSignal = false;
+    isRolled = false;
     b.reset(startKey, exitKey, mazeType, useWeights);
     setTimeout(()=>{
       attackSignal = true;
@@ -40,33 +47,49 @@
 
   const gacha = document.getElementById("gacha");
   gacha.addEventListener("click", () => {
-    attackSignal = false;
-    setTimeout(()=>{
-      txtToSpeech(`You have rolled ${b.chosenPath}`);
-      b.findPath(b.start);
-    }, delay);
+    if (!isRolled) {
+      attackSignal = false;
+      b.getPath();
+      slotC.style.visibility = "visible";
+      animateSlot();
+      txtToSpeech(`Rolling`);
+      setTimeout(()=>{
+        txtToSpeech(`You have rolled ${b.chosenPath}`);
+        setTimeout(() => {
+          slotC.style.visibility = "hidden";
+        }, 2000);
+        b.findPath(b.start);
+      }, rollDelay);
+    } else {
+      txtToSpeech(`You have already rolled ${b.chosenPath}`);
+    }
+    isRolled = true;
   });
 
   const recursiveLink = document.getElementById("recursive");
   recursiveLink.addEventListener("click", () => {
+    isRolled = false;
     mazeType = "recursive";
     b.reset(startKey, exitKey, mazeType, useWeights);
   });
 
   const randomLink = document.getElementById("random");
   randomLink.addEventListener("click", () => {
+    isRolled = false;
     mazeType = "random";
     b.reset(startKey, exitKey, mazeType, useWeights);
   });
 
   const mazeLink = document.getElementById("maze");
   mazeLink.addEventListener("click", () => {
+    isRolled = false;
     useWeights = false;
     b.reset(startKey, exitKey, mazeType, useWeights);
   });
 
   const bombsLink = document.getElementById("bombs");
   bombsLink.addEventListener("click", () => {
+    isRolled = false;
     useWeights = true;
     b.reset(startKey, exitKey, mazeType, useWeights);
   });
@@ -83,6 +106,61 @@
     activateSpeech();
   });
 
+  // Slot events
+  function animateSlot() {
+    slotC.height = Math.floor(b.mainHeight * 0.2);
+    slotC.width = window.innerWidth;
+    const pathResult = b.chosenPath; // display random result
+    const pathList = b.pathSlots; // display all possible paths
+    const scale = Math.floor(window.innerWidth * 0.06); // Font size and overall scale
+    const breaks = 0.003; // Speed loss per frame
+    const endSpeed = 0.05; // Speed at which the text stops
+    const numOfFrames = 220; // number of frames until text stops (60/s)
+    // const delay = 40; // number of frames between texts
+    const pathMap = [];
+    let offsetV = endSpeed + breaks * numOfFrames;
+    let offset = -(1 + numOfFrames) * (breaks * numOfFrames + 2 * endSpeed) / 2;
+
+    for (let i=0; i<pathList.length; i++) {
+      pathMap[pathList[i]] = i;
+    }
+    function animate() {
+      slotCtx.setTransform(1, 0, 0, 1, 0, 0);
+      slotCtx.clearRect(0, 0, slotC.width, slotC.height);
+      slotCtx.globalAlpha = 1;
+      slotCtx.fillStyle = "#622";
+      slotCtx.fillRect(0, (slotC.height - scale) / 2, slotC.width, scale);
+      slotCtx.fillStyle = "#ccc";
+      slotCtx.textBaseline = "middle";
+      slotCtx.textAlign = "center";
+      slotCtx.setTransform(1, 0, 0, 1, Math.floor((slotC.width / 2)), Math.floor(slotC.height/2));
+      let o = offset;
+      while (o<0) o++; // ensure smooth spin stop
+      o %= 1;
+      const h = Math.ceil(slotC.height / 2 / scale);
+      for (let j=-h; j<h; j++) {
+        let c = pathMap[pathResult] + j - Math.floor(offset);
+        while (c<0) c += pathList.length;
+        c %= pathList.length;
+        const s = 1 - Math.abs(j + o) / (slotC.height / 2 / scale + 1);
+        slotCtx.globalAlpha = s;
+        slotCtx.font = scale * s + "px Helvetica";
+        slotCtx.fillText(pathList[c], 0, (j + o) * scale);
+      }
+      offset += offsetV; // required for spining
+      offsetV -= breaks; // required for slowing down spin
+      if (offsetV < endSpeed) { // required for stopping spin
+        offset = 0;
+        offsetV = 0;
+      }
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+  }
+
+
+  // Keyboard presses events
   window.addEventListener("keydown", keyboardEvents);
 
   function keyboardEvents(e) {
@@ -147,11 +225,13 @@
     }
   }
 
+  // Text to speech events
   function txtToSpeech(text) {
     const msg = new SpeechSynthesisUtterance(text);
     window.speechSynthesis.speak(msg);
   }
 
+  // Voice command events
   function commands() {
     // Define commands
     return {
@@ -201,16 +281,29 @@
       },
       "new game": function() {
         attackSignal = false;
+        isRolled = false;
         b.reset(startKey, exitKey, mazeType, useWeights);
         attackSignal = true;
       },
       "help": function() {
-        attackSignal = false;
-        setTimeout(()=>{
-          txtToSpeech(`You have rolled ${b.chosenPath}`);
-          b.findPath(b.start);
-        }, delay);
-        pathDisplayed = true;
+        if (!isRolled) {
+          attackSignal = false;
+          b.getPath();
+          slotC.style.visibility = "visible";
+          animateSlot();
+          txtToSpeech(`Rolling`);
+          setTimeout(()=>{
+            txtToSpeech(`You have rolled ${b.chosenPath}`);
+            setTimeout(() => {
+              slotC.style.visibility = "hidden";
+            }, 2000);
+            b.findPath(b.start);
+          }, rollDelay);
+          pathDisplayed = true;
+        } else {
+          txtToSpeech(`You have already rolled ${b.chosenPath}`);
+        }
+        isRolled = true;
       },
       "end game": function() {
         if (pathDisplayed === true) {
@@ -240,24 +333,28 @@
         }
       },
       "activate recursive maze": function() {
+        isRolled = false;
         attackSignal = false;
         mazeType = "recursive";
         b.reset(startKey, exitKey, mazeType, useWeights);
         attackSignal = true;
       },
       "activate random maze": function() {
+        isRolled = false;
         attackSignal = false;
         mazeType = "random";
         b.reset(startKey, exitKey, mazeType, useWeights);
         attackSignal = true;
       },
       "activate bombs mode": function() {
+        isRolled = false;
         attackSignal = false;
         useWeights = true;
         b.reset(startKey, exitKey, mazeType, useWeights);
         attackSignal = true;
       },
       "activate maze mode": function() {
+        isRolled = false;
         attackSignal = false;
         useWeights = false;
         b.reset(startKey, exitKey, mazeType, useWeights);
