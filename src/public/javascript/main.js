@@ -228,6 +228,7 @@
   // Text to speech events
   function txtToSpeech(text) {
     const msg = new SpeechSynthesisUtterance(text);
+    msg.lang = "ja-JP";
     window.speechSynthesis.speak(msg);
   }
 

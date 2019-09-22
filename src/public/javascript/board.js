@@ -347,6 +347,7 @@ class Board {
     const repliesArr = type;
     const randomNum = Math.floor(Math.random() * repliesArr.length);
     const msg = new SpeechSynthesisUtterance(repliesArr[randomNum]);
+    msg.lang = "ja-JP";
     window.speechSynthesis.speak(msg);
   }
 
@@ -358,7 +359,7 @@ class Board {
       "Watch where you are going!",
       "You suck as this!",
       "I hate you!",
-      "Ba ka!",
+      "ばか!",
       "Stop driving me into the wall!",
       "You should be sent to a driving school!",
     ];
