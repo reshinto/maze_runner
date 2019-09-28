@@ -43,121 +43,147 @@
     Your browser does not support the HTML5 Canvas element.
   </canvas>
 
-  <nav class="navbar fixed-top navbar-expand-lg navbar-dark nav-custom">
-    <a class="navbar-brand"><h2>Maze Runner</h2></a>
-    <!-- creates hamburger icon during small screen -->
-    <button class="icon-custom navbar-toggler"
-      type="button"
-      data-toggle="collapse"
-      data-target="#navbarCollapse"
-      aria-controls="navbarCollapse"
-      aria-expanded="false"
-      aria-label="Toggle navigation"
-    >
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div id="navbarCollapse" class="collapse navbar-collapse">
-      <ul class="navbar-nav mr-auto">
-          <li
-            class="nav-item"
-            data-toggle="collapse"
-            data-target="#navbarCollapse"
-          >
-            <a id="new" class="nav-link" href="#">
-              <span class="text">
-                New Game
-              </span>
-            </a>
-          </li>
 
-          <li
-            class="nav-item"
-            data-toggle="collapse"
-            data-target="#navbarCollapse"
-          >
-            <a id="gacha" class="nav-link" href="#">
-              <span class="text">
-                Gacha
-              </span>
-            </a>
-          </li>
-
-      </ul>
-      <ul class="navbar-nav">
-          <!-- all items in list will be pushed right -->
-          <li
-            class="nav-item dropdown"
-            data-toggle="collapse"
-            data-target="#navbarCollapse"
-          >
-            <a
-              class="nav-link dropdown-toggle"
-              href="#"
-              id="navbarDropdownMenuLink"
-              role="button"
-              data-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
+  <header id="header" class="myheader">
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark nav-custom">
+      <a class="navbar-brand"><h2>Maze Runner</h2></a>
+      <!-- creates hamburger icon during small screen -->
+      <button class="icon-custom navbar-toggler"
+        type="button"
+        data-toggle="collapse"
+        data-target="#navbarCollapse"
+        aria-controls="navbarCollapse"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div id="navbarCollapse" class="collapse navbar-collapse">
+        <ul class="navbar-nav mr-auto">
+            <li
+              class="nav-item"
+              data-toggle="collapse"
+              data-target="#navbarCollapse"
             >
-              <span class="text">Maze Type</span>
-            </a>
-            <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-              <a id="recursive" class="dropdown-item" href="#">Recursive</a>
-              <a id="random" class="dropdown-item" href="#">Random</a>
-            </div>
-            </a>
-          </li>
+              <a id="new" class="nav-link" href="#">
+                <span class="text">
+                  New Game
+                </span>
+              </a>
+            </li>
 
-          <li
-            class="nav-item dropdown"
-            data-toggle="collapse"
-            data-target="#navbarCollapse"
-          >
-            <a
-              class="nav-link dropdown-toggle"
-              href="#"
-              id="navbarDropdownMenuLink"
-              role="button"
-              data-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
+            <li
+              class="nav-item"
+              data-toggle="collapse"
+              data-target="#navbarCollapse"
             >
-              <span class="text">
-                Game Mode
-              </span>
-            </a>
-            <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-              <a id="maze" class="dropdown-item" href="#">Maze</a>
-              <a id="bombs" class="dropdown-item" href="#">Bombs</a>
-            </div>
-          </li>
+              <a id="start" class="nav-link" href="#">
+                <span class="text">
+                  Start Game
+                </span>
+              </a>
+            </li>
 
-          <li
-            class="nav-item dropdown"
-            data-toggle="collapse"
-            data-target="#navbarCollapse"
-          >
-            <a
-              class="nav-link dropdown-toggle"
-              href="#"
-              id="navbarDropdownMenuLink"
-              role="button"
-              data-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
+            <li
+              class="nav-item"
+              data-toggle="collapse"
+              data-target="#navbarCollapse"
             >
-              <span class="text">
-                Voice Mode
-              </span>
-            </a>
-            <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-              <a id="speechOn" class="dropdown-item" href="#">On</a>
-              <a id="speechOff" class="dropdown-item" href="#">Off</a>
-            </div>
-          </li>
-      </ul>
+              <a id="gacha" class="nav-link" href="#">
+                <span class="text">
+                  Gacha
+                </span>
+              </a>
+            </li>
+
+        </ul>
+        <ul class="navbar-nav">
+            <!-- all items in list will be pushed right -->
+            <li
+              class="nav-item dropdown"
+              data-toggle="collapse"
+              data-target="#navbarCollapse"
+            >
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                id="navbarDropdownMenuLink"
+                role="button"
+                data-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <span class="text">Maze Type</span>
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <a id="recursive" class="dropdown-item" href="#">Recursive</a>
+                <a id="random" class="dropdown-item" href="#">Random</a>
+              </div>
+              </a>
+            </li>
+
+            <li
+              class="nav-item dropdown"
+              data-toggle="collapse"
+              data-target="#navbarCollapse"
+            >
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                id="navbarDropdownMenuLink"
+                role="button"
+                data-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <span class="text">
+                  Game Mode
+                </span>
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <a id="maze" class="dropdown-item" href="#">Maze</a>
+                <a id="bombs" class="dropdown-item" href="#">Bombs</a>
+              </div>
+            </li>
+
+            <li
+              class="nav-item dropdown"
+              data-toggle="collapse"
+              data-target="#navbarCollapse"
+            >
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                id="navbarDropdownMenuLink"
+                role="button"
+                data-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <span class="text">
+                  Voice Mode
+                </span>
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <a id="speechOn" class="dropdown-item" href="#">On</a>
+                <a id="speechOff" class="dropdown-item" href="#">Off</a>
+              </div>
+            </li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="hp-moves-board">
+      <div class="hp-moves">
+        <span>Health: <span>
+            <img id="hp1" src="images/heart.png" alt="hp">
+            <img id="hp2" src="images/heart.png" alt="hp">
+            <img id="hp3" src="images/heart.png" alt="hp">
+      </div>
+      <div class="hp-moves">
+        <span>Moves: </span><span id="moves">1</span>
+        <span>/</span>
+        <span id="min-moves">0</span>
+      </div>
     </div>
-  </nav>
-
-  <header class="myheader">
   </header>
