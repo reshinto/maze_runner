@@ -30,12 +30,12 @@ h2 {
 }
 
 .dropdown-item:hover {
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(105, 105, 105, 0.5);
   color: #cd853f;
 }
 
 .dropdown-menu {
-  background-color: rgba(0, 0, 0, 0);
+  background-color: rgba(0, 0, 0, 0.9);
 }
 
 .icon-custom.navbar-toggler .navbar-toggler-icon {
@@ -48,4 +48,19 @@ h2 {
 
 .icon-custom.navbar-toggler:focus {
   outline-color: #cd853f;
+}
+
+.hp-moves-board {
+  position: absolute;
+  display: flex;
+  width: 100vw;
+  height: 100%;
+  color: #cd853f;
+  justify-content: space-around;
+  align-items: flex-end;
+}
+
+.hp-moves {
+  margin: 20px;
+  font-size: 40px;
 }

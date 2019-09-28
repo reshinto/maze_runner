@@ -10,6 +10,9 @@
   overflow: hidden;
   padding: 0;
   width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .mymain {
@@ -29,7 +32,7 @@
 .backgroundAnimation {
   height: 100vh;
   position: absolute;
-  z-index: -999999;
+  z-index: -1;
 }
 
 .slot {
@@ -37,4 +40,90 @@
   position: absolute;
   top: 10px;
   z-index: 2;
+}
+
+.tutorials {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.75);
+  /* border: 2px solid #cd853f; */
+  width: 70%;
+  height: 70%;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #cd853f;
+  padding: 20px;
+}
+
+h1 {
+  text-transform: uppercase;
+}
+
+.tut-header {
+  width: 100%;
+  height: 10%;
+  display: flex;
+  justify-content: center;
+}
+
+.tut-list {
+  font-size: 14px;
+}
+
+.subtitle {
+  font-size: 20px;
+}
+
+#tutorial {
+  display: none;
+}
+
+.tut-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 80%;
+  overflow-y: auto;
+  padding: 10px;
+  border: 1px solid black;
+  line-height: 1em;
+}
+
+.tut-wrapper::-webkit-scrollbar {
+  -webkit-appearance: none;
+}
+.tut-wrapper::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  border: 2px solid white; /* should match background, can't be transparent */
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.tiles {
+  display: flex;
+  justify-content: space-around;
+}
+
+.tut-footer {
+  display: flex;
+  width: 100%;
+  height: 10%;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 20px;
+}
+
+.prev {
+  display: none;
+}
+
+.tut-button {
+  border: 1px solid #cd853f;
+  background-color: rgba(105, 105, 105, 0.5);
+  color: #cd853f;
+}
+
+.tut-li {
+  margin: 10px auto;
 }
