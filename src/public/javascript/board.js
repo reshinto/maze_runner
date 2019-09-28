@@ -1,393 +1,1022 @@
-/* global WeightedGraph Maze */
+/* global annyang WeightedGraph dijkstra aStar animatePath */
+const tutorials = document.getElementById("tutorials");
+const options = document.getElementById("options");
+const tutorial = document.getElementById("tutorial");
+const skip = document.getElementById("skip");
+skip.addEventListener("click", () => {
+  tutorials.style.display = "none";
+});
 
-class Board {
-  constructor(startKey, exitKey, mazeType, useWeights) {
-    this.pathSlots = [
-      "dijkstra",
-      "a star",
-      "breath first search",
-      "depth first search",
-    ];
-    this.c = document.getElementById("canvas");
-    this.ctx = this.c.getContext("2d");
-    this.reset(startKey, exitKey, mazeType, useWeights);
-  }
+const prev = document.getElementById("prev");
+prev.addEventListener("click", () => {
+  options.style.display = "flex";
+  tutorial.style.display = "none";
+  prev.style.display = "none";
+  next.style.display = "block";
+  skip.innerHTML = "Skip Tutorial";
+});
 
-  reset(startKey, exitKey, mazeType, useWeights) {
-    // this.pathDisplayed = false;
-    // this.chosenPath;
-    this.useWeights = useWeights === undefined ? false : useWeights;
-    this.mazeType = mazeType;
-    this.setMainHeight();
-    this.setMapDimensions();
-    this.setCanvasDimensions();
-    this.setSettings(startKey, exitKey);
-    this.draw();
-  }
+const next = document.getElementById("next");
+next.addEventListener("click", () => {
+  options.style.display = "none";
+  tutorial.style.display = "flex";
+  prev.style.display = "block";
+  next.style.display = "none";
+  skip.innerHTML = "Close Tutorial";
+});
+const moves = document.getElementById("moves");
+const minMoves = document.getElementById("min-moves");
+const slotC = document.getElementById("slot");
+slotC.style.visibility = "hidden";
+const slotCtx = slotC.getContext("2d");
+const c = document.getElementById("canvas");
+const ctx = c.getContext("2d");
+let tileSize; // use for width and height;
+let padding;
+let mapWidth;
+let mapHeight;
+let mainHeight;
+let playerPos;
+let exitPos;
+let monsterArr;
+let wallArr;
+let lastKey;
+let g;
+let useWeights;
+let useSpeech;
+let attackSignal;
+let pathDisplayed;
+let isRolled;
+let delay;
+let rollDelay;
+let monsterMovementType;
+let chosenPath;
+let monstersPathMap;
+let mazeType;
+let pathSlots;
+let searchFinished;
+let slotAnimatingDone;
+let helpPath;
+let hp;
 
-  getHeaderHeight() {
-    const header = document.getElementsByTagName("header");
-    const headerStr = window
-      .getComputedStyle(header[0])
-      .getPropertyValue("height");
-    return headerStr.slice(0, headerStr.length - 2);
-  }
+function initialSettings() {
+  useSpeech = false;
+  attackSignal = false;
+  pathDisplayed = false;
+  isRolled = false;
+  delay = 500;
+  rollDelay = 4000;
+  monstersPathMap = {};
+  tileSize = 30; // use for width and height;
+  padding = 40;
+  mapWidth = 0;
+  mapHeight = 0;
+  mainHeight = 0;
+  playerPos = 0;
+  exitPos = 0;
+  monsterArr = [];
+  wallArr = [];
+  helpPath = [];
+  hp = 3;
+  lastKey = 0;
+  g = undefined;
+  monsterMovementType = "";
+  chosenPath = "";
+  slotAnimatingDone = false;
+  searchFinished = false;
+  minMoves.innerHTML = 0;
+  pathSlots = [
+    "dijkstra",
+    "a star",
+    // "breath first search",
+    // "depth first search",
+  ];
+}
 
-  setMainHeight() {
-    const main = document.getElementsByTagName("main");
-    this.mainHeight = window.innerHeight - this.getHeaderHeight();
-    main[0].style.height = `${this.mainHeight}px`;
-  }
+function reset(_mazeType, _useWeights) {
+  initialSettings();
+  useWeights = _useWeights === undefined ? false : _useWeights;
+  mazeType = _mazeType === undefined ? "random" : _mazeType;
+  setMainHeight();
+  setMapDimensions();
+  setCanvasDimensions();
+  setSettings();
+  lastKey = getLastKey();
+  wallArr = new Array(lastKey).fill(1);
+  drawMaze();
+  resetHp();
+}
 
-  setMapDimensions() {
-    this.tileWidth = 30;
-    this.tileHeight = 30;
-    this.mapWidth = Math.round((window.innerWidth - 40) / this.tileWidth);
-    this.mapHeight = Math.round((this.mainHeight - 40) / this.tileHeight);
-  }
-
-  setCanvasDimensions() {
-    // this.canvasWidth = this.mapWidth * this.tileWidth;
-    // this.canvasHeight = this.mapHeight * this.tileHeight;
-    this.c.height = this.mapHeight * this.tileHeight;
-    this.c.width = this.mapWidth * this.tileWidth;
-  }
-
-  setSettings(startKey, exitKey) {
-    this.setPlayerLocation(startKey);
-    this.setExitLocation(exitKey);
-    this.setMonstersLocation();
-    this.g = new WeightedGraph(
-      this.ctx,
-      this.start,
-      this.mapWidth,
-      this.tileWidth,
-      this.monsterList,
-    );
-    this.path = null;
-  }
-
-  setPlayerLocation(startKey) {
-    this.startKey = startKey !== undefined ? startKey : this.randomKey();
-    this.start = getCoords(this.startKey, this.mapWidth, this.tileWidth);
-  }
-
-  setExitLocation(exitKey) {
-    this.exitKey = exitKey !== undefined ? exitKey : this.randomKey();
-    if (this.exitKey === this.startKey) {
-      while (this.exitKey === this.startKey) {
-        this.exitKey = this.randomKey();
-      }
-    }
-    this.exit = getCoords(this.exitKey, this.mapWidth, this.tileWidth);
-  }
-
-  setMonstersLocation() {
-    this.monsterList = [];
-    this.monsterMovementType;
-    this.monstersPathMap = {};
-    let monstersMap = {};
-    const randomCoordsArr = [];
-    const randomMonsterNumber = Math.floor(Math.random() * (this.mapWidth / 5));
-    // get monsters position
-    while (randomCoordsArr.length < randomMonsterNumber) {
-      const r = this.randomKey();
-      if (
-        randomCoordsArr.indexOf(r) === -1 &&
-        r !== this.startKey &&
-        r !== this.exitKey
-      ) {
-        randomCoordsArr.push(getCoords(r, this.mapWidth, this.tileWidth));
-      }
-    }
-    // create each monster and assign position
-    for (let i = 0; i < randomMonsterNumber; i++) {
-      monstersMap = {};
-      monstersMap[`monster${i}`] = randomCoordsArr[i];
-      this.monsterList.push(monstersMap);
-    }
-  }
-
-  randomKey() {
-    return Math.floor(Math.random() * this.mapWidth * this.mapHeight);
-  }
-
-  draw() {
-    this.drawMaze();
-    // this.redraw("monster");
-    this.redraw("exit");
-    this.redraw("player");
-  }
-
-  drawMaze() {
-    const maze = new Maze(
-      this.ctx,
-      this.g,
-      this.startKey,
-      this.start,
-      this.exitKey,
-      this.exit,
-      this.monsterList,
-      this.mapWidth,
-      this.mapHeight,
-      this.tileWidth,
-      this.tileHeight,
-      this.useWeights,
-    );
-    switch (this.mazeType) {
-      case "recursive":
-        this.world = maze.drawRecursiveMap();
-        break;
-      default:
-        this.world = maze.drawRandomMazeMap();
-        break;
-    }
-  }
-
-  updatePlayerMovement(incrementKey, walkPath) {
-    if (incrementKey !== undefined) {
-      this.toRedraw = true;
-      this.oldStart = this.start;
-      if (walkPath === true && !this.useWeights) {
-        // move player to new location automatically
-        // use mainly for moving all the way to the exit
-        this.startKey = incrementKey;
-        this.start = getCoords(this.startKey, this.mapWidth, this.tileWidth);
-      } else if (
-        walkPath === undefined &&
-        this.g.vertexList[this.startKey + incrementKey].wall === 1
-      ) {
-        // move player to new location manually by 1 step
-        this.startKey += incrementKey;
-        this.start = getCoords(this.startKey, this.mapWidth, this.tileWidth);
-      } else if (
-        walkPath === undefined &&
-        this.g.vertexList[this.startKey + incrementKey].wall > 1 &&
-        !this.useWeights
-      ) {
-        // player hit the wall
-        this.randomReply();
-      } else if (walkPath === undefined && this.useWeights) {
-        // if bombs mode activated, can pass through wall
-        this.startKey += incrementKey;
-        this.start = getCoords(this.startKey, this.mapWidth, this.tileWidth);
-        if (this.g.vertexList[this.startKey].wall > 1) {
-          this.blast = true;
-          this.randomReply(this.bombsReplies());
-        }
-      } else if (walkPath === true && this.useWeights) {
-        // walk to path automatically, even through bombs
-        this.startKey = incrementKey;
-        this.start = getCoords(this.startKey, this.mapWidth, this.tileWidth);
-        if (this.g.vertexList[this.startKey].wall > 1) {
-          this.blast = true;
-          this.randomReply(this.bombsReplies());
-        }
-      }
-    }
-  }
-
-  redraw(type, incrementKey, newStart, walkPath) {
-    this.toRedraw = false;
-    this.oldStart;
-    let start;
-    let file;
-    if (newStart === undefined) start = this.start;
-    else start = newStart;
-    this.updatePlayerMovement(incrementKey, walkPath);
-    const image = new Image();
-    switch (type) {
-      case "wall":
-        file = "/images/wall.png";
-        break;
-      case "player":
-        file = "/images/start.png";
-        image.onload = () => {
-          this.ctx.drawImage(image, this.start.x, this.start.y);
-        };
-        break;
-      case "exit":
-        file = "/images/exit.png";
-        image.onload = () => {
-          this.ctx.drawImage(image, this.exit.x, this.exit.y);
-        };
-        break;
-      case "floor":
-        file = "/images/floor.png";
-        image.onload = () => {
-          this.ctx.drawImage(image, start.x, start.y);
-        };
-        break;
-      case "blast":
-        file = "/images/blast.png";
-        image.onload = () => {
-          this.ctx.drawImage(image, start.x, start.y);
-        };
-        break;
-      default:
-        break;
-    }
-    image.src = file;
-    if (this.oldStart !== undefined && this.toRedraw && !this.useWeights) {
-      this.redraw("floor", undefined, this.oldStart);
-      this.redraw("player");
-    } else if (
-      this.oldStart !== undefined &&
-      this.toRedraw &&
-      this.useWeights
-    ) {
-      if (this.blast) {
-        // clear player from previous position
-        if (!this.prevBlast) this.redraw("floor", undefined, this.oldStart);
-        else this.redraw("blast", undefined, this.oldStart);
-        this.prevBlast = true;
-        // add effect on current location
-        this.redraw("blast", undefined, this.start);
-        this.redraw("player");
-        this.blast = false;
-      } else {
-        // remove player from blast at last blast location
-        if (this.prevBlast) {
-          this.prevBlast = false;
-          this.redraw("blast", undefined, this.oldStart);
-        } else this.redraw("floor", undefined, this.oldStart);
-      }
-    }
-  }
-
-  updateMonsterMovement(i, newKey) {
-    if (newKey !== undefined) {
-      this.oldMonsterStart = this.monsterList[i][`monster${i}`];
-      this.monsterList[i][`monster${i}`] = getCoords(
-        newKey,
-        this.mapWidth,
-        this.tileWidth,
-      );
-    }
-  }
-
-  redrawMonster(i, newKey) {
-    const image = new Image();
-    const start = this.monsterList[i][`monster${i}`];
-
-    this.updateMonsterMovement(i, newKey);
-    image.onload = () => {
-      this.ctx.drawImage(image, start.x, start.y);
-    };
-    image.src = "/images/monster.png";
-    this.redraw("floor", undefined, this.oldMonsterStart);
-    // redraw monster at new position
-    if (newKey !== undefined) this.redrawMonster(i);
-  }
-
-  startMonstersAttack() {
-    if (this.monsterMovementType === undefined) {
-      this.getPath();
-      this.monsterMovementType = this.chosenPath;
-    }
-    for (let i = 0; i < this.monsterList.length; i++) {
-      const start = this.monsterList[i][`monster${i}`];
-      if (Object.entries(this.monstersPathMap).length === 0) {
-        this.monstersPathMap[i] = this.findPath(start, this.start, true);
-      } else if (this.monstersPathMap[i] === undefined) {
-        this.monstersPathMap[i] = this.findPath(start, this.start, true);
-      }
-      if (this.monstersPathMap[i].length === 0) {
-        this.monstersPathMap[i] = this.findPath(start, this.start, true);
-      }
-      this.redrawMonster(i, this.monstersPathMap[i].pop());
-      this.redraw("floor", undefined, this.oldMonsterStart);
-    }
-  }
-
-  getPath() {
-    // if (this.chosenPath === undefined) {
-    const num = Math.floor(Math.random() * this.pathSlots.length);
-    this.chosenPath = this.pathSlots[num];
-    console.log(this.chosenPath);
-    // }
-  }
-
-  findPath(start, _exit, monsterUse = false, animateOff = false) {
-    // this.pathDisplayed = true;
-    const exit = _exit === undefined ? this.exit : _exit;
-    let path;
-    switch (this.chosenPath) {
-      case "dijkstra":
-        path = !monsterUse
-          ? this.g.dijkstra(exit, start, animateOff)
-          : this.g.dijkstraMonster(exit, start);
-        break;
-      case "a star":
-        path = !monsterUse
-          ? this.g.aStar(exit, start, animateOff)
-          : this.g.aStarMonster(exit, start);
-        break;
-      case "breath first search":
-        path = !monsterUse
-          ? this.g.breathFirstSearch(exit, start, animateOff)
-          : this.g.breathFirstSearchMonster(exit, start);
-        break;
-      case "depth first search":
-        path = !monsterUse
-          ? this.g.depthFirstSearch(exit, start, animateOff)
-          : this.g.depthFirstSearchMonster(exit, start);
-        break;
-      default:
-        break;
-    }
-    // this.chosenPath = undefined;
-    this.redraw("exit");
-    this.redraw("player");
-    if (!monsterUse) this.path = path;
-    return path;
-  }
-
-  randomReply(type = this.mazeReplies()) {
-    const repliesArr = type;
-    const randomNum = Math.floor(Math.random() * repliesArr.length);
-    const msg = new SpeechSynthesisUtterance(repliesArr[randomNum]);
-    msg.lang = "ja-JP";
-    window.speechSynthesis.speak(msg);
-  }
-
-  mazeReplies() {
-    return [
-      "Ouch!",
-      "I can't go there!",
-      "That hurts!",
-      "Watch where you are going!",
-      "You suck as this!",
-      "I hate you!",
-      "ばか!",
-      "Stop driving me into the wall!",
-      "You should be sent to a driving school!",
-    ];
-  }
-
-  bombsReplies() {
-    return [
-      "Ouch!",
-      "Damn! It hurts!",
-      "No!",
-      "I hate you!",
-      "Stop killing me!",
-    ];
+function resetHp() {
+  for (let i=1; i<=hp; i++) {
+    document.getElementById(`hp${i}`).style.visibility = "visible";
   }
 }
 
-function getCoords(key, mapWidth, tileWidth) {
-  // return x, y array index if tileWidth is not provided
-  // return x, y actual coordinates if tileWidth is provided
-  if (tileWidth === undefined) {
+function getHeaderHeight() {
+  const header = document.getElementById("header");
+  const headerStr = window.getComputedStyle(header).getPropertyValue("height");
+  return headerStr.slice(0, headerStr.length - 2);
+}
+
+function setMainHeight() {
+  const main = document.getElementById("main");
+  mainHeight = window.innerHeight - getHeaderHeight();
+  main.style.height = `${mainHeight}px`;
+}
+
+function setMapDimensions() {
+  mapWidth = Math.round((window.innerWidth - padding) / tileSize);
+  mapHeight = Math.round((mainHeight - padding) / tileSize);
+}
+
+function setCanvasDimensions() {
+  c.width = mapWidth * tileSize;
+  c.height = mapHeight * tileSize;
+}
+
+function setSettings() {
+  setPlayerPosition(randomKey());
+  setExitPosition();
+  setMonstersPosition();
+  g = new WeightedGraph();
+}
+
+function randomKey() {
+  return Math.floor(Math.random() * mapWidth * mapHeight);
+}
+
+function setPlayerPosition(key) {
+  playerPos = key === undefined ? randomKey() : key;
+}
+
+function setExitPosition(key) {
+  if (key !== undefined) exitPos = key;
+  else {
+    exitPos = randomKey();
+    if (exitPos === playerPos) {
+      while (exitPos === playerPos) {
+        exitPos = randomKey();
+      }
+    }
+  }
+}
+
+function generateRandomMonsterNumber() {
+  // number of possible monsters increases as mapWidth increases
+  return Math.floor(Math.random() * (mapWidth / 6));
+}
+
+function setMonstersPosition() {
+  const arrSize = generateRandomMonsterNumber() + 1;
+  const matchArr = new Array(arrSize);
+  let r;
+  monsterArr = new Array(arrSize).fill(null).map(() => {
+    r = randomKey();
+    while (matchArr.indexOf(r) !== -1 || r === playerPos || r === exitPos) {
+      r = randomKey();
+    }
+    matchArr.push(r);
+    return r;
+  });
+  return monsterArr;
+}
+
+function getLastKey() {
+  const x = tileSize * mapWidth - tileSize;
+  const y = tileSize * mapHeight - tileSize;
+  return getKey(x, y);
+}
+
+function getCoords(key, tileSize) {
+  if (tileSize === undefined) {
+    // return x, y nested array index
     return {
       x: key % mapWidth,
       y: Math.floor(key / mapWidth),
     };
   } else {
+    // return top left x, y actual coordinates
     return {
-      x: (key % mapWidth) * tileWidth,
-      y: Math.floor(key / mapWidth) * tileWidth,
+      x: (key % mapWidth) * tileSize,
+      y: Math.floor(key / mapWidth) * tileSize,
     };
   }
 }
+
+function getKey(x, y) {
+  return Math.floor(x / tileSize) + Math.floor(y / tileSize) * mapWidth;
+}
+
+function draw(key, type) {
+  const {x, y} = getCoords(Number(key), tileSize);
+  const img = new Image();
+  const file = getImgFile(type);
+  img.onload = () => {
+    ctx.drawImage(img, x, y);
+  };
+  img.src = file;
+}
+
+function getImgFile(type) {
+  switch (type) {
+    case "wall":
+      return "/images/wall.png";
+    case "player":
+      return "/images/start.png";
+    case "exit":
+      return "/images/exit.png";
+    case "blast":
+      return "/images/blast.png";
+    case "monster":
+      return "/images/monster.png";
+    case "path":
+      return "/images/path.png";
+    case "search":
+      return "/images/searched.png";
+    case "bomb":
+      return "/images/bomb.png";
+    case "floor":
+      return "/images/floor2.png";
+    default:
+      return "/images/floor.png";
+  }
+}
+
+function getBotLeftTopRightCoords() {
+  const topRight = mapWidth - 1;
+  const bottomLeft = mapWidth * mapHeight - mapWidth;
+  return [topRight, bottomLeft];
+}
+
+function addConnections(key, w, useW) {
+  // nodes are added from top to bottom, left to right
+  const k = key;
+  const kx = mapWidth;
+  const lastK = lastKey;
+  const [rightTopK, leftBottomK] = getBotLeftTopRightCoords();
+  if (k === 0) {
+    // top left
+    g.addEdge(k, k + 1, w, useW); // connect right
+    g.addEdge(k, k + kx, w, useW); // connect bottom
+  } else if (k === rightTopK) {
+    // top right
+    g.addEdge(k, k + kx, w, useW); // connect bottom
+    g.addEdge(k, k - 1, w, useW); // connect left
+  } else if (k === lastK) {
+    // bottom right
+    g.addEdge(k, k - kx, w, useW); // connect top
+    g.addEdge(k, k - 1, w, useW); // connect left
+  } else if (k === leftBottomK) {
+    // bottom left
+    g.addEdge(k, k - kx, w, useW); // connect top
+    g.addEdge(k, k + 1, w, useW); // connect right
+  } else if (k > 0 && k < rightTopK) {
+    // top
+    g.addEdge(k, k + 1, w, useW); // connect right
+    g.addEdge(k, k + kx, w, useW); // connect bottom
+    g.addEdge(k, k - 1, w, useW); // connect left
+  } else if (k !== rightTopK && k !== lastK && (k + 1) % mapWidth === 0) {
+    // right
+    g.addEdge(k, k - kx, w, useW); // connect top
+    g.addEdge(k, k + kx, w, useW); // connect bottom
+    g.addEdge(k, k - 1, w, useW); // connect left
+  } else if (k > leftBottomK && k < lastK) {
+    // bottom
+    g.addEdge(k, k - kx, w, useW); // connect top
+    g.addEdge(k, k + 1, w, useW); // connect right
+    g.addEdge(k, k - 1, w, useW); // connect left
+  } else if (k !== 0 && k !== leftBottomK && k % mapWidth === 0) {
+    // left
+    g.addEdge(k, k - kx, w, useW); // connect top
+    g.addEdge(k, k + 1, w, useW); // connect right
+    g.addEdge(k, k + kx, w, useW); // connect bottom
+  } else {
+    g.addEdge(k, k - kx, w, useW); // connect top
+    g.addEdge(k, k + 1, w, useW); // connect right
+    g.addEdge(k, k + kx, w, useW); // connect bottom
+    g.addEdge(k, k - 1, w, useW); // connect left
+  }
+}
+
+function addRandomWalls() {
+  // add random obstacles (bombs, walls, etc)
+  for (let i = 0; i < wallArr.length; i++) {
+    if (i !== playerPos && i !== exitPos && monsterArr.includes(i) === false) {
+      wallArr[i] = Math.random() > 0.75 ? 5 : 1;
+    }
+  }
+}
+
+// Recursive Backtracker Algorithm
+function addRecursiveWalls() {
+  for (let i = 0; i <= lastKey; i++) {
+    // surround entire maze with walls
+    const k = i;
+    const kx = mapWidth;
+    const rightTopK = kx - 1;
+    const lastK = lastKey;
+    const leftBottomK = mapWidth * mapHeight - mapWidth;
+    let wall =
+      k === 0 ||
+      k === rightTopK || // top-left top-right
+      k === leftBottomK ||
+      k === lastKey || // bottom-left bottom-right
+      (k > 0 && k < rightTopK) || // top
+      (k !== rightTopK && k !== lastK && (k + 1) % mapWidth === 0) || // right
+      (k > leftBottomK && k < lastK) || // bottom
+      (k !== 0 && k !== leftBottomK && k % mapWidth === 0) // left
+        ? 5
+        : 1;
+    if (i === playerPos || i === exitPos || monsterArr.includes(i)) wall = 1;
+    wallArr[i] = wall;
+  }
+  const {x, y} = getCoords(lastKey); // get x, y indexes of virtual nested array
+  drawRecursiveInnerWalls(0, 0, x, y);
+}
+
+function drawRecursiveInnerWalls(x1, y1, x2, y2) {
+  const width = x2 - x1;
+  const height = y2 - y1;
+  if (width >= height) {
+    verticalBisection(x1, y1, x2, y2);
+  } else {
+    // horizontal bisection
+    horizontalBisection(x1, y1, x2, y2);
+  }
+}
+
+function verticalBisection(x1, y1, x2, y2) {
+  let bisection;
+  let max;
+  let min;
+  let randomPassage;
+  let currentKey;
+  let first = false;
+  let second = false;
+  let k;
+  if (x2 - x1 > 3) {
+    bisection = Math.ceil((x1 + x2) / 2);
+    max = y2 - 1;
+    min = y1 + 1;
+    randomPassage = Math.floor(Math.random() * (max - min + 1)) + min;
+    k = getKey(bisection * tileSize, y2 * tileSize);
+    if (wallArr[k] === 1) {
+      randomPassage = max;
+      first = true;
+    }
+    k = getKey(bisection * tileSize, y1 * tileSize);
+    if (wallArr[k] === 1) {
+      randomPassage = min;
+      second = true;
+    }
+    for (let i = y1 + 1; i < y2; i++) {
+      if (first && second) {
+        if (i === max || i === min) continue;
+      } else if (i === randomPassage) continue;
+      currentKey = getKey(bisection * tileSize, i * tileSize);
+      wallArr[currentKey] = 5;
+      // ensure wall does not clash with start and exit
+      if (
+        currentKey === playerPos ||
+        currentKey === exitPos ||
+        monsterArr.includes(currentKey)
+      ) {
+        wallArr[currentKey] = 1;
+      }
+    }
+    drawRecursiveInnerWalls(x1, y1, bisection, y2);
+    drawRecursiveInnerWalls(bisection, y1, x2, y2);
+  }
+}
+
+function horizontalBisection(x1, y1, x2, y2) {
+  let bisection;
+  let max;
+  let min;
+  let randomPassage;
+  let currentKey;
+  let first = false;
+  let second = false;
+  let k;
+  if (y2 - y1 > 3) {
+    bisection = Math.ceil((y1 + y2) / 2);
+    max = x2 - 1;
+    min = x1 + 1;
+    randomPassage = Math.floor(Math.random() * (max - min + 1)) + min;
+    k = getKey(x2 * tileSize, bisection * tileSize);
+    if (wallArr[k] === 1) {
+      randomPassage = max;
+      first = true;
+    }
+    k = getKey(x1 * tileSize, bisection * tileSize);
+    if (wallArr[k] === 1) {
+      randomPassage = min;
+      second = true;
+    }
+    for (let i = x1 + 1; i < x2; i++) {
+      if (first && second) {
+        if (i === max || i === min) continue;
+      } else if (i === randomPassage) continue;
+      currentKey = getKey(i * tileSize, bisection * tileSize);
+      wallArr[currentKey] = 5;
+      // ensure wall does not clash with start and exit
+      if (currentKey === playerPos) {
+        wallArr[currentKey] = 1;
+      }
+      if (currentKey === exitPos) {
+        wallArr[currentKey] = 1;
+      }
+      if (monsterArr.includes(currentKey)) {
+        wallArr[currentKey] = 1;
+      }
+    }
+    drawRecursiveInnerWalls(x1, y1, x2, bisection);
+    drawRecursiveInnerWalls(x1, bisection, x2, y2);
+  }
+}
+
+function drawFloor() {
+  for (let i = 0; i <= lastKey; i++) {
+    g.addVertex(String(i));
+    draw(i);
+  }
+}
+
+function drawConnections() {
+  for (let i = 0; i <= lastKey; i++) {
+    if (wallArr[i] === 5) {
+      if (useWeights) {
+        draw(i, "bomb");
+      } else if (!useWeights) {
+        draw(i, "wall");
+      }
+    }
+    addConnections(i, wallArr[i], useWeights);
+  }
+}
+
+function drawMonsters() {
+  for (let i = 0; i < monsterArr.length; i++) {
+    draw(monsterArr[i], "monster");
+  }
+}
+
+function getPath(animate = true) {
+  return findPath(playerPos, exitPos, g, animate);
+}
+
+// function drawPath(path) {
+//   for (let i = 1; i < path.length - 1; i++) {
+//     draw(path[i], "path");
+//   }
+// }
+
+function getChosenPath() {
+  const num = Math.floor(Math.random() * pathSlots.length);
+  chosenPath = pathSlots[num];
+  return chosenPath;
+}
+
+function findPath(start, _exit, g, animate = true) {
+  start = String(start);
+  const exit = _exit === undefined ? String(exitPos) : String(_exit);
+  let path;
+  switch (chosenPath) {
+    case "dijkstra":
+      path = dijkstra(start, exit, g, animate);
+      break;
+    case "a star":
+      path = aStar(start, exit, g, animate);
+      break;
+    // case "breath first search":
+    //   return breathFirstSearch(start, exit, g);
+    //   break;
+    // case "depth first search":
+    //   return depthFirstSearch(start, exit, g, animateOff);
+    default:
+      break;
+  }
+  return path;
+}
+
+function drawMaze() {
+  mazeType === "random" ? addRandomWalls() : addRecursiveWalls();
+  drawFloor();
+  setTimeout(() => {
+    drawMonsters();
+    draw(exitPos, "exit");
+    draw(playerPos, "player");
+    drawConnections();
+    const minPath = aStar(
+      String(playerPos),
+      String(exitPos),
+      g,
+      false,
+    );
+    if (!useWeights) {
+      minMoves.innerHTML = minPath.length;
+    } else {
+      for (let i=0; i<minPath.length; i++) {
+        if (wallArr[Number(minPath[i])] === 5) {
+          minMoves.innerHTML = Number(minMoves.innerHTML) + 5;
+        } else {
+          minMoves.innerHTML = Number(minMoves.innerHTML) + 1;
+        }
+      }
+    }
+  }, 200);
+}
+
+function randomReply() {
+  const repliesArr = useWeights === false ? mazeReplies() : bombsReplies();
+  const randomNum = Math.floor(Math.random() * repliesArr.length);
+  txtToSpeech(repliesArr[randomNum]);
+}
+
+// Text to speech events
+function txtToSpeech(text) {
+  const msg = new SpeechSynthesisUtterance(text);
+  msg.lang = "ja-JP";
+  window.speechSynthesis.speak(msg);
+}
+
+function mazeReplies() {
+  return [
+    "Ouch!",
+    "I can't go there!",
+    "That hurts!",
+    "Watch where you are going!",
+    "You suck as this!",
+    "I hate you!",
+    "ばか!",
+    "Stop driving me into the wall!",
+    "You should be sent to a driving school!",
+  ];
+}
+
+function bombsReplies() {
+  return ["Ouch!", "Damn! It hurts!", "No!", "I hate you!", "Stop killing me!"];
+}
+
+function startMonstersAttack() {
+  // loop through each monster
+  for (let i = 0; i < monsterArr.length; i++) {
+    // allow each monster to use different path algorithm
+    monsterMovementType = getChosenPath();
+    const start = monsterArr[i];
+    // check if any path been searched for monsters
+    if (Object.entries(monstersPathMap).length === 0) {
+      monstersPathMap[i] = findPath(start, playerPos, g, false).reverse();
+      monstersPathMap[i].pop();
+      // check if next monster path has been searched
+    } else if (monstersPathMap[i] === undefined) {
+      monstersPathMap[i] = findPath(start, playerPos, g, false).reverse();
+      monstersPathMap[i].pop();
+    }
+    // check if a monster path has finished
+    if (monstersPathMap[i].length === 0) {
+      monstersPathMap[i] = findPath(start, playerPos, g, false).reverse();
+      monstersPathMap[i].pop();
+    }
+    draw(monsterArr[i]);
+    monsterArr[i] = monstersPathMap[i].pop();
+    draw(start, "floor");
+    draw(monsterArr[i], "monster");
+    if (monsterArr[i] === String(playerPos)) {
+      document.getElementById(`hp${hp}`).style.visibility = "hidden";
+      hp -= 1;
+      if (hp <= 0) {
+        alert("GAME OVER!");
+        reset(mazeType, useWeights);
+      }
+    }
+  }
+}
+
+const newGame = document.getElementById("new");
+newGame.addEventListener("click", () => {
+  // attackSignal = false;
+  isRolled = false;
+  reset(mazeType, useWeights);
+});
+
+const start = document.getElementById("start");
+start.addEventListener("click", () => {
+  attackSignal = true;
+  const interval = setInterval(() => {
+    if (attackSignal === false) {
+      clearInterval(interval);
+    }
+    startMonstersAttack();
+  }, delay);
+});
+
+const gacha = document.getElementById("gacha");
+gacha.addEventListener("click", () => {
+  if (!isRolled) {
+    attackSignal = false;
+    getChosenPath();
+    slotC.style.visibility = "visible";
+    animateSlot();
+    txtToSpeech(`Rolling`);
+    const slotInterval = setInterval(() => {
+      if (slotAnimatingDone) {
+        txtToSpeech(`You have rolled ${chosenPath}`);
+        slotC.style.visibility = "hidden";
+        clearInterval(slotInterval);
+        helpPath = getPath();
+        const pathInterval = setInterval(() => {
+          if (searchFinished) {
+            animatePath(helpPath);
+            clearInterval(pathInterval);
+          }
+        }, 500);
+      }
+    }, 1000);
+  } else {
+    txtToSpeech(`You have already rolled ${chosenPath}`);
+  }
+  isRolled = true;
+});
+
+const recursiveLink = document.getElementById("recursive");
+recursiveLink.addEventListener("click", () => {
+  isRolled = false;
+  mazeType = "recursive";
+  reset(mazeType, useWeights);
+});
+
+const randomLink = document.getElementById("random");
+randomLink.addEventListener("click", () => {
+  isRolled = false;
+  mazeType = "random";
+  reset(mazeType, useWeights);
+});
+
+const mazeLink = document.getElementById("maze");
+mazeLink.addEventListener("click", () => {
+  isRolled = false;
+  useWeights = false;
+  reset(mazeType, useWeights);
+});
+
+const bombsLink = document.getElementById("bombs");
+bombsLink.addEventListener("click", () => {
+  isRolled = false;
+  useWeights = true;
+  reset(mazeType, useWeights);
+});
+
+const speechOnLink = document.getElementById("speechOn");
+speechOnLink.addEventListener("click", () => {
+  useSpeech = true;
+  activateSpeech();
+});
+
+const speechOffLink = document.getElementById("speechOff");
+speechOffLink.addEventListener("click", () => {
+  useSpeech = false;
+  activateSpeech();
+});
+
+// Slot events
+function animateSlot() {
+  slotC.height = Math.floor(mainHeight * 0.2);
+  slotC.width = window.innerWidth;
+  const pathResult = chosenPath; // display random result
+  const pathList = pathSlots; // display all possible paths
+  // Font size and overall scale
+  const scale = Math.floor(window.innerWidth * 0.06);
+  const breaks = 0.003; // Speed loss per frame
+  const endSpeed = 0.05; // Speed at which the text stops
+  const numOfFrames = 220; // number of frames until text stops (60/s)
+  // const delay = 40; // number of frames between texts
+  const pathMap = [];
+  let offsetV = endSpeed + breaks * numOfFrames;
+  let offset = (-(1 + numOfFrames) * (breaks * numOfFrames + 2 * endSpeed)) / 2;
+
+  for (let i = 0; i < pathList.length; i++) {
+    pathMap[pathList[i]] = i;
+  }
+  function animate() {
+    slotCtx.setTransform(1, 0, 0, 1, 0, 0);
+    slotCtx.clearRect(0, 0, slotC.width, slotC.height);
+    slotCtx.globalAlpha = 1;
+    slotCtx.fillStyle = "#622";
+    slotCtx.fillRect(0, (slotC.height - scale) / 2, slotC.width, scale);
+    slotCtx.fillStyle = "#ccc";
+    slotCtx.textBaseline = "middle";
+    slotCtx.textAlign = "center";
+    slotCtx.setTransform(
+      1,
+      0,
+      0,
+      1,
+      Math.floor(slotC.width / 2),
+      Math.floor(slotC.height / 2),
+    );
+    let o = offset;
+    while (o < 0) o++; // ensure smooth spin stop
+    o %= 1;
+    const h = Math.ceil(slotC.height / 2 / scale);
+    for (let j = -h; j < h; j++) {
+      let c = pathMap[pathResult] + j - Math.floor(offset);
+      while (c < 0) c += pathList.length;
+      c %= pathList.length;
+      const s = 1 - Math.abs(j + o) / (slotC.height / 2 / scale + 1);
+      slotCtx.globalAlpha = s;
+      slotCtx.font = scale * s + "px Helvetica";
+      slotCtx.fillText(pathList[c], 0, (j + o) * scale);
+    }
+    offset += offsetV; // required for spining
+    offsetV -= breaks; // required for slowing down spin
+    if (offsetV < endSpeed) {
+      // required for stopping spin
+      offset = 0;
+      offsetV = 0;
+    }
+    if (offset === 0 && offsetV === 0) slotAnimatingDone = true;
+    requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+// Keyboard presses events
+window.addEventListener("keydown", keyboardEvents);
+
+function keyboardEvents(e) {
+  switch (e.keyCode) {
+    case 87:
+    case 38:
+      move("up");
+      break;
+    case 68:
+    case 39:
+      move("right");
+      break;
+    case 83:
+    case 40:
+      move("down");
+      break;
+    case 65:
+    case 37:
+      move("left");
+      break;
+    default:
+      break;
+  }
+  if (playerPos === exitPos) {
+    setTimeout(() => {
+      alert("end game");
+      reset(mazeType, useWeights);
+      attackSignal = true;
+    }, 200);
+  }
+}
+
+function getNewPosition(type) {
+  switch (type) {
+    case "up":
+      return playerPos - mapWidth;
+    case "down":
+      return playerPos + mapWidth;
+    case "right":
+      return playerPos + 1;
+    case "left":
+      return playerPos - 1;
+    default:
+      return undefined;
+  }
+}
+
+function move(type) {
+  const {x} = getCoords(playerPos);
+  const newPos = getNewPosition(type);
+  if (!useWeights && wallArr[newPos] === 5) {
+    moves.innerHTML = Number(moves.innerHTML) + 1;
+    return randomReply();
+  } else if (useWeights && wallArr[newPos] === 5) {
+    draw(newPos, "blast");
+    randomReply();
+  }
+  switch (type) {
+    case "up":
+      if (playerPos >= mapWidth) {
+        handleBlast(newPos);
+        playerPos = newPos;
+        draw(playerPos, "player");
+      } else {
+        randomReply();
+      }
+      break;
+    case "down":
+      if (playerPos <= lastKey - mapWidth) {
+        handleBlast(newPos);
+        playerPos = newPos;
+        draw(playerPos, "player");
+      } else {
+        randomReply();
+      }
+      break;
+    case "right":
+      if (x < mapWidth - 1) {
+        handleBlast(newPos);
+        playerPos = newPos;
+        draw(playerPos, "player");
+      } else randomReply();
+      break;
+    case "left":
+      if (x > 0) {
+        handleBlast(newPos);
+        playerPos = newPos;
+        draw(playerPos, "player");
+      } else {
+        randomReply();
+      }
+      break;
+    default:
+      randomReply();
+  }
+  if (!useWeights) {
+    moves.innerHTML = Number(moves.innerHTML) + 1;
+  } else {
+    if (wallArr[Number(playerPos)] === 5) {
+      moves.innerHTML = Number(moves.innerHTML) + 5;
+    } else {
+      moves.innerHTML = Number(moves.innerHTML) + 1;
+    }
+  }
+}
+
+function handleBlast(newPos) {
+  if (wallArr[playerPos] === 5 && wallArr[newPos] === 1) {
+    draw(playerPos, "blast");
+  } else if (wallArr[playerPos] === 5 && wallArr[newPos] === 5) {
+    draw(playerPos, "blast");
+  } else draw(playerPos);
+}
+
+// Voice command events
+function commands() {
+  // Define commands
+  return {
+    "move up": move("up"),
+    "move up to end": function() {
+      txtToSpeech("moving up.");
+      for (let i = 0; i < mapHeight; i++) {
+        (function(i) {
+          setTimeout(() => {
+            move("up");
+          }, 300 * i);
+        })(i);
+      }
+    },
+    "move right": move("right"),
+    "move right to end": function() {
+      txtToSpeech("moving right.");
+      for (let i = 0; i < mapWidth; i++) {
+        (function(i) {
+          setTimeout(() => {
+            move("right");
+          }, 300 * i);
+        })(i);
+      }
+    },
+    "move down": move("down"),
+    "move down to end": function() {
+      txtToSpeech("moving down.");
+      for (let i = 0; i < mapHeight; i++) {
+        (function(i) {
+          setTimeout(() => {
+            move("down");
+          }, 300 * i);
+        })(i);
+      }
+    },
+    "move left": move("left"),
+    "move left to end": function() {
+      txtToSpeech("moving left.");
+      for (let i = 0; i < mapWidth; i++) {
+        (function(i) {
+          setTimeout(() => {
+            move("left");
+          }, 300 * i);
+        })(i);
+      }
+    },
+    "new game": function() {
+      attackSignal = false;
+      isRolled = false;
+      reset(mazeType, useWeights);
+      attackSignal = true;
+    },
+    "help": function() {
+      if (!isRolled) {
+        attackSignal = false;
+        getChosenPath();
+        slotC.style.visibility = "visible";
+        animateSlot();
+        txtToSpeech(`Rolling`);
+        const slotInterval = setInterval(() => {
+          if (slotAnimatingDone) {
+            txtToSpeech(`You have rolled ${chosenPath}`);
+            slotC.style.visibility = "hidden";
+            clearInterval(slotInterval);
+            helpPath = getPath();
+            const pathInterval = setInterval(() => {
+              if (searchFinished) {
+                pathDisplayed = true;
+                animatePath(helpPath);
+                clearInterval(pathInterval);
+              }
+            }, 500);
+          }
+        }, 1000);
+      } else {
+        txtToSpeech(`You have already rolled ${chosenPath}`);
+      }
+      isRolled = true;
+    },
+    "end game": function() {
+      if (pathDisplayed === true) {
+        const path = getPath(false);
+        for (let i = 0; i < path.length; i++) {
+          (function(i) {
+            setTimeout(() => {
+              draw(playerPos);
+              playerPos = path[i];
+              draw(playerPos, "player");
+              if (Number(playerPos) === exitPos) {
+                setTimeout(() => {
+                  alert("end game");
+                  reset(mazeType, useWeights);
+                }, 200);
+              }
+            }, 300 * i);
+          })(i);
+        }
+      } else {
+        txtToSpeech("No cheating allowed.");
+      }
+    },
+    "activate recursive maze": function() {
+      isRolled = false;
+      attackSignal = false;
+      mazeType = "recursive";
+      reset(mazeType, useWeights);
+      attackSignal = true;
+    },
+    "activate random maze": function() {
+      isRolled = false;
+      attackSignal = false;
+      mazeType = "random";
+      reset(mazeType, useWeights);
+      attackSignal = true;
+    },
+    "activate bombs mode": function() {
+      isRolled = false;
+      attackSignal = false;
+      useWeights = true;
+      reset(mazeType, useWeights);
+      attackSignal = true;
+    },
+    "activate maze mode": function() {
+      isRolled = false;
+      attackSignal = false;
+      useWeights = false;
+      reset(mazeType, useWeights);
+      attackSignal = true;
+    },
+    "deactivate voice mode": function() {
+      useSpeech = false;
+      activateSpeech();
+      txtToSpeech("Voice mode deactivated.");
+    },
+  };
+}
+
+function activateSpeech() {
+  if (useSpeech) {
+    if (annyang) {
+      txtToSpeech("Voice mode activated. Please give your command.");
+
+      // Add commands to annyang
+      annyang.addCommands(commands());
+
+      // Start listening.
+      annyang.start({paused: false});
+
+      annyang.addCallback("soundstart", function() {
+        console.log("sound detected");
+      });
+    } else {
+      annyang.abort();
+    }
+  }
+}
+
+reset("random", false);
+window.addEventListener("resize", () => {
+  reset(mazeType, useWeights);
+});

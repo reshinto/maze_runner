@@ -3,8 +3,8 @@ class PriorityQueue {
     this.values = [];
   }
 
-  enqueue(vertex, weight, vertexList) {
-    const newNode = new Node(vertex, weight, vertexList);
+  enqueue(value, priority) {
+    const newNode = new Node(value, priority);
     this.values.push(newNode);
     this.bubbleUp();
   }
@@ -15,7 +15,7 @@ class PriorityQueue {
     while (index > 0) {
       const parentIndex = Math.floor((index - 1) / 2);
       const parent = this.values[parentIndex];
-      if (element.weight >= parent.weight) break;
+      if (element.priority >= parent.priority) break;
       this.values[parentIndex] = element;
       this.values[index] = parent;
       index = parentIndex;
@@ -44,15 +44,15 @@ class PriorityQueue {
       let swap = null;
       if (leftChildIndex < length) {
         leftChild = this.values[leftChildIndex];
-        if (leftChild.weight < element.weight) {
+        if (leftChild.priority < element.priority) {
           swap = leftChildIndex;
         }
       }
       if (rightChildIndex < length) {
         rightChild = this.values[rightChildIndex];
         if (
-          (swap === null && rightChild.weight < element.weight) ||
-          (swap !== null && rightChild.weight < leftChild.weight)
+          (swap === null && rightChild.priority < element.priority) ||
+          (swap !== null && rightChild.priority < leftChild.priority)
         ) {
           swap = rightChildIndex;
         }
