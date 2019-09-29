@@ -139,25 +139,25 @@ function horizontalBisection(x1, y1, x2, y2) {
 function getImgFile(type) {
   switch (type) {
     case "wall":
-      return "/images/wall.png";
+      return "./public/images/wall.png";
     case "player":
-      return "/images/start.png";
+      return "./public/images/start.png";
     case "exit":
-      return "/images/exit.png";
+      return "./public/images/exit.png";
     case "blast":
-      return "/images/blast.png";
+      return "./public/images/blast.png";
     case "monster":
-      return "/images/monster.png";
+      return "./public/images/monster.png";
     case "path":
-      return "/images/path.png";
+      return "./public/images/path.png";
     case "search":
-      return "/images/searched.png";
+      return "./public/images/searched.png";
     case "bomb":
-      return "/images/bomb.png";
+      return "./public/images/bomb.png";
     case "floor":
-      return "/images/floor2.png";
+      return "./public/images/floor2.png";
     default:
-      return "/images/floor.png";
+      return "./public/images/floor.png";
   }
 }
 

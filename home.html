@@ -11,7 +11,7 @@
 
   <!-- annyang javascript -->
   <script
-    src="//cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"
+    src="https://cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"
   ></script>
 
   <!-- bootstrap javascript -->
@@ -32,8 +32,8 @@
   ></script>
 
   <title>Maze Runner</title>
-  <link rel="stylesheet" href="/stylesheets/header.css">
-  <link rel="stylesheet" href="/stylesheets/main.css">
+  <link rel="stylesheet" href="./public/stylesheets/header.css">
+  <link rel="stylesheet" href="./public/stylesheets/main.css">
 
 </head>
 <body class="mybody"
@@ -176,9 +176,9 @@
     <div class="hp-moves-board">
       <div class="hp-moves">
         <span>Health: <span>
-            <img id="hp1" src="images/heart.png" alt="hp">
-            <img id="hp2" src="images/heart.png" alt="hp">
-            <img id="hp3" src="images/heart.png" alt="hp">
+            <img id="hp1" src="./public/images/heart.png" alt="hp">
+            <img id="hp2" src="./public/images/heart.png" alt="hp">
+            <img id="hp3" src="./public/images/heart.png" alt="hp">
       </div>
       <div class="hp-moves">
         <span>Moves: </span><span id="moves">1</span>
@@ -187,3 +187,84 @@
       </div>
     </div>
   </header>
+  <main class="mymain" id="main">
+    <canvas id="slot" class="slot">
+      Your browser does not support the HTML5 Canvas element.
+    </canvas>
+
+    <canvas id="canvas" class="mycanvas">
+      Your browser does not support the HTML5 Canvas element.
+    </canvas>
+  </main>
+
+  <div id="tutorials" class="tutorials">
+    <div class="tut-header">
+      <h1>Maze Runner</h1>
+    </div>
+    <div id="options" class="tut-wrapper">
+      <h2 class="subtitle">Game options</h2>
+      <ol>
+        <li class="tut-li">New Game</li>
+        <span>- Restart game with the current settings.</span>
+        <li class="tut-li">Start Game</li>
+        <span>- Monsters will start to attack.</span>
+        <li class="tut-li">Gacha</li>
+        <span>- This will activate a slot machine to randomly select from a list of searching algorithms.<br>- The AI will scan the surroundings to find the shortest path towards the exit.<br>- After scanning, a lighted path will be displayed.<br>- All monsters will be deactivated during and after this process.<br>- This can only be used once.</span>
+        <li class="tut-li">Maze Type</li>
+        <span>- Choose between recursively generated maze or randomly generated maze.</span>
+        <li class="tut-li">Game mode</li>
+        <span>- Choose between having walls as obstacles or bombs as obstacles.<br>- Unlike Bombs, Walls cannot be penetrated.</span>
+        <li class="tut-li">Voice Mode</li>
+        <span>- Use Speech Recognition to activate commads</span>
+      </ol>
+    </div>
+    <div id="tutorial" class="tut-wrapper">
+      <h2 class="subtitle">Tutorial</h2>
+      <ol>
+        <li class="tut-li">
+          The goal of this game is to control your player and get to the exit with the least number of moves.
+        </li>
+        <li class="tut-li">Control player via wasd or arrow keys.</li>
+        <div class="tiles">
+          <span>Player:&ensp;<img src="./public/images/start.png" alt="player"></span>
+          <span>Exit:&ensp;<img src="./public/images/exit.png" alt="exit"></span>
+          <span>Wall:&ensp;<img src="./public/images/wall.png" alt="wall"></span>
+          <span>Bomb:&ensp;<img src="./public/images/bomb.png" alt="bomb"></span>
+          <span>Explosion:&ensp;<img src="./public/images/blast.png" alt="blast"></span>
+          <span>Lighted Path:&ensp;<img src="./public/images/path.png" alt="path"></span>
+        </div>
+        <li class="tut-li">Moves are counted by the number of times you pressed the keyboard.</li>
+        <li class="tut-li">If you touched a bomb, or explosion, 1 move will be multiplied by 5.</li>
+        <li class="tut-li">Your character will complain to you if you run into a wall, bomb or explosion.</li>
+        <li class="tut-li">No hearts will be lost if you run over a bomb.</li>
+        <li class="tut-li">Monsters will search for your location once and will move towards and until it reaches the end of the searched path, before searching for your position again.</li>
+        <span>Monster:&ensp;<img src="./public/images/monster.png" alt="monster"></span>
+        <li class="tut-li">The number of monsters are random, however, the max number will vary according to the map size.</li>
+        <li class="tut-li">Each time the monster touches you within it's path, 1 heart will be lost.</li>
+        <span>Heart:&ensp;<img src="./public/images/heart.png" alt="heart"></span>
+        <li class="tut-li">Lose 3 hearts and you will have 1 life left before losing the game.</li>
+        <li class="tut-li">One way of avoiding the monsters is to move away from the monster's path, while the monster is currently moving.</li>
+        <li class="tut-li">Ambushing a monster, while not being in the monster's path will allow you to kill the monster temporarily without losing a heart. However, monster will revive at it's death location almost immediately.</li>
+        <li>The only way to permanently kill a monster is to kill it at it's last path, which is at your location if you did not move. However, doing so will cost you 1 heart.</li>
+      </ol>
+      <p>Images by <a target="_blank" rel="noopener noreferrer" href="https://www.newgrounds.com/art/view/hyptosis/tile-art-batch-1">Hyptosis</a></p>
+    </div>
+    <div class="tut-footer">
+      <button id="skip" class="tut-button">Skip Tutorial</button>
+      <div>
+        <button id="prev" class="prev tut-button">Previous</button>
+        <button id="next" class="tut-button">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript" src="./public/javascript/background.js"></script>
+  <script type="text/javascript" src="./public/javascript/Node.js"></script>
+  <script type="text/javascript" src="./public/javascript/PriorityQueue.js"></script>
+  <script type="text/javascript" src="./public/javascript/WeightedGraph.js"></script>
+  <script type="text/javascript" src="./public/javascript/Maze.js"></script>
+  <script type="text/javascript" src="./public/javascript/Board.js"></script>
+  <script type="text/javascript" src="./public/javascript/main.js"></script>
+</body>
+</html>
+

@@ -332,50 +332,50 @@ function bombsReplies() {
 function commands() {
   // Define commands
   return {
-    "move up": move("up"),
-    "move up to end": function() {
-      txtToSpeech("moving up.");
-      for (let i = 0; i < mapHeight; i++) {
-        (function(i) {
-          setTimeout(() => {
-            move("up");
-          }, 300 * i);
-        })(i);
-      }
-    },
-    "move right": move("right"),
-    "move right to end": function() {
-      txtToSpeech("moving right.");
-      for (let i = 0; i < mapWidth; i++) {
-        (function(i) {
-          setTimeout(() => {
-            move("right");
-          }, 300 * i);
-        })(i);
-      }
-    },
-    "move down": move("down"),
-    "move down to end": function() {
-      txtToSpeech("moving down.");
-      for (let i = 0; i < mapHeight; i++) {
-        (function(i) {
-          setTimeout(() => {
-            move("down");
-          }, 300 * i);
-        })(i);
-      }
-    },
-    "move left": move("left"),
-    "move left to end": function() {
-      txtToSpeech("moving left.");
-      for (let i = 0; i < mapWidth; i++) {
-        (function(i) {
-          setTimeout(() => {
-            move("left");
-          }, 300 * i);
-        })(i);
-      }
-    },
+    // "move up": move("up"),
+    // "move up to end": function() {
+    //   txtToSpeech("moving up.");
+    //   for (let i = 0; i < mapHeight; i++) {
+    //     (function(i) {
+    //       setTimeout(() => {
+    //         move("up");
+    //       }, 300 * i);
+    //     })(i);
+    //   }
+    // },
+    // "move right": move("right"),
+    // "move right to end": function() {
+    //   txtToSpeech("moving right.");
+    //   for (let i = 0; i < mapWidth; i++) {
+    //     (function(i) {
+    //       setTimeout(() => {
+    //         move("right");
+    //       }, 300 * i);
+    //     })(i);
+    //   }
+    // },
+    // "move down": move("down"),
+    // "move down to end": function() {
+    //   txtToSpeech("moving down.");
+    //   for (let i = 0; i < mapHeight; i++) {
+    //     (function(i) {
+    //       setTimeout(() => {
+    //         move("down");
+    //       }, 300 * i);
+    //     })(i);
+    //   }
+    // },
+    // "move left": move("left"),
+    // "move left to end": function() {
+    //   txtToSpeech("moving left.");
+    //   for (let i = 0; i < mapWidth; i++) {
+    //     (function(i) {
+    //       setTimeout(() => {
+    //         move("left");
+    //       }, 300 * i);
+    //     })(i);
+    //   }
+    // },
     "new game": function() {
       attackSignal = false;
       isRolled = false;
