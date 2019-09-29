@@ -451,7 +451,7 @@ function drawMaze() {
         }
       }
     }
-  }, 200);
+  }, 500);
 }
 const moves = document.getElementById("moves");
 
@@ -1001,8 +1001,10 @@ function startMonstersAttack() {
       document.getElementById(`hp${hp}`).style.visibility = "hidden";
       hp -= 1;
       if (hp <= 0) {
-        alert("GAME OVER!");
-        reset(mazeType, useWeights);
+        setTimeout(() => {
+          alert("GAME OVER!");
+          reset(mazeType, useWeights);
+        }, 400);
       }
     }
   }
