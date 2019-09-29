@@ -1,4 +1,4 @@
-/* global wallArr PriorityQueue getCoords tileSize draw exitPos searchFinished */
+/* global wallArr PriorityQueue getCoords tileSize draw exitPos searchFinished mapWidth mapHeight */
 
 class WeightedGraph {
   constructor() {
@@ -64,16 +64,14 @@ function animateSearch(currentPos, count) {
 }
 
 function animatePath(path) {
-  // path does not include current position
-  // current position was removed in the search algorithms
-  for (let i=1; i<path.length-1; i++) {
+  for (let i = 1; i < path.length - 1; i++) {
     (function(i) {
       setTimeout(() => draw(path[i], "path"), 50 * i);
     })(i);
   }
 }
 
-function dijkstra(start, finish, g, animate=true) {
+function dijkstra(start, finish, g, animate = true) {
   const nodes = new PriorityQueue();
   const distances = {};
   const previous = {};
@@ -134,12 +132,21 @@ function dijkstra(start, finish, g, animate=true) {
 }
 
 function manhattanDistance(_start, _finish) {
-  const start = getCoords(Number(_start), tileSize);
-  const finish = getCoords(Number(_finish), tileSize);
-  return Math.abs(start.x - finish.x) + Math.abs(start.y - finish.y);
+  // const start = getCoords(Number(_start), tileSize);
+  // const finish = getCoords(Number(_finish), tileSize);
+  // return Math.abs(start.x - finish.x) + Math.abs(start.y - finish.y);
+  // const start = getCoords(Number(_start));
+  // const finish = getCoords(Number(_finish));
+  // return Math.abs(start.x - finish.x) + Math.abs(start.y - finish.y);
+  const start = Number(_start);
+  const finish = Number(_finish);
+  return (
+    Math.floor(Math.abs(start - finish) / mapWidth) +
+    Math.floor(Math.abs(start - finish) / mapHeight)
+  );
 }
 
-function aStar(start, finish, g, animate=true) {
+function aStar(start, finish, g, animate = true) {
   const nodes = new PriorityQueue();
   const distances = {};
   const previous = {};
@@ -184,7 +191,7 @@ function aStar(start, finish, g, animate=true) {
         // calculate new distance to neighboring node
         const candidate =
           distances[smallest] +
-          nextNode.weight +
+          nextNode.weight *
           manhattanDistance(nextNode.node, finish);
         const nextNeighbor = nextNode.node;
         if (candidate < distances[nextNode.node]) {
