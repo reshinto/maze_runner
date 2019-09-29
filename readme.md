@@ -9,6 +9,6 @@
 * Use package.json to install.
 > npm install
 ## Game features
-![Game Options](./src/public/images/game_options.png)
+![Game Options](./public/images/game_options.png)
 ## Tutorial
-![Game Options](./src/public/images/tutorials.png)
+![Game Options](./public/images/tutorials.png)
