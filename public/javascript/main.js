@@ -455,37 +455,9 @@ function drawMaze() {
   }, 800);
 }
 
-// tutorial events
-const tutorials = document.getElementById("tutorials");
-const options = document.getElementById("options");
-const tutorial = document.getElementById("tutorial");
-const skip = document.getElementById("skip");
-skip.addEventListener("click", () => {
-  tutorials.style.display = "none";
-});
-
-const prev = document.getElementById("prev");
-prev.addEventListener("click", () => {
-  options.style.display = "flex";
-  tutorial.style.display = "none";
-  prev.style.display = "none";
-  next.style.display = "block";
-  skip.innerHTML = "Skip Tutorial";
-});
-
-const next = document.getElementById("next");
-next.addEventListener("click", () => {
-  options.style.display = "none";
-  tutorial.style.display = "flex";
-  prev.style.display = "block";
-  next.style.display = "none";
-  skip.innerHTML = "Close Tutorial";
-});
-
 // status events
 const newGame = document.getElementById("new");
 newGame.addEventListener("click", () => {
-  // attackSignal = false;
   isRolled = false;
   reset(mazeType, useWeights);
 });
@@ -504,7 +476,6 @@ start.addEventListener("click", () => {
 const gacha = document.getElementById("gacha");
 gacha.addEventListener("click", () => {
   if (!isRolled) {
-    attackSignal = false;
     getChosenPath();
     slotC.style.visibility = "visible";
     animateSlot();
@@ -673,7 +644,6 @@ function keyboardEvents(e) {
     setTimeout(() => {
       alert("end game");
       reset(mazeType, useWeights);
-      attackSignal = true;
     }, 200);
   }
 }
@@ -861,14 +831,11 @@ function commands() {
       }
     },
     "new game": function() {
-      attackSignal = false;
       isRolled = false;
       reset(mazeType, useWeights);
-      attackSignal = true;
     },
     "help": function() {
       if (!isRolled) {
-        attackSignal = false;
         getChosenPath();
         slotC.style.visibility = "visible";
         animateSlot();
@@ -916,31 +883,23 @@ function commands() {
     },
     "activate recursive maze": function() {
       isRolled = false;
-      attackSignal = false;
       mazeType = "recursive";
       reset(mazeType, useWeights);
-      attackSignal = true;
     },
     "activate random maze": function() {
       isRolled = false;
-      attackSignal = false;
       mazeType = "random";
       reset(mazeType, useWeights);
-      attackSignal = true;
     },
     "activate bombs mode": function() {
       isRolled = false;
-      attackSignal = false;
       useWeights = true;
       reset(mazeType, useWeights);
-      attackSignal = true;
     },
     "activate maze mode": function() {
       isRolled = false;
-      attackSignal = false;
       useWeights = false;
       reset(mazeType, useWeights);
-      attackSignal = true;
     },
     "deactivate voice mode": function() {
       useSpeech = false;
