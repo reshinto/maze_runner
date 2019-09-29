@@ -54,6 +54,7 @@ function initialSettings() {
   slotAnimatingDone = false;
   searchFinished = false;
   minMoves.innerHTML = 0;
+  moves.innerHTML = 0;
   pathSlots = [
     "dijkstra",
     "a star",
