@@ -4,10 +4,7 @@
 ## Algorithms used
 * Dijkstra, A Star, Recursive Backtracker Algorithm
 ## Technologies used
-* HTML5, CSS, Javascript, Canvas, Express, EJS, dotenv
-## How to get it running
-* Use package.json to install.
-> npm install
+* HTML5, CSS, Javascript, Canvas
 ## Game features
 ![Game Options](./public/images/game_options.png)
 ## Tutorial
