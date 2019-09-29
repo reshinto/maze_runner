@@ -52,7 +52,6 @@ class WeightedGraph {
 function animateSearch(currentPos, count) {
   if (count > 0 && wallArr[currentPos] === 1) {
     (function(count) {
-      console.log("working");
       setTimeout(() => {
         if (Number(currentPos) !== exitPos) {
           draw(currentPos, "search");

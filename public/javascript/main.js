@@ -139,9 +139,8 @@ function getLastKey() {
   return getKey(x, y);
 }
 
-
 function resetHp() {
-  for (let i=1; i<=hp; i++) {
+  for (let i = 1; i <= hp; i++) {
     document.getElementById(`hp${i}`).style.visibility = "visible";
   }
 }
@@ -517,6 +516,7 @@ gacha.addEventListener("click", () => {
         helpPath = getPath();
         const pathInterval = setInterval(() => {
           if (searchFinished) {
+            pathDisplayed = true;
             animatePath(helpPath);
             clearInterval(pathInterval);
           }
@@ -783,55 +783,83 @@ function mazeReplies() {
 function bombsReplies() {
   return ["Ouch!", "Damn! It hurts!", "No!", "I hate you!", "Stop killing me!"];
 }
-
 // Voice command events
 function commands() {
   // Define commands
   return {
-    // "move up": move("up"),
-    // "move up to end": function() {
-    //   txtToSpeech("moving up.");
-    //   for (let i = 0; i < mapHeight; i++) {
-    //     (function(i) {
-    //       setTimeout(() => {
-    //         move("up");
-    //       }, 300 * i);
-    //     })(i);
-    //   }
-    // },
-    // "move right": move("right"),
-    // "move right to end": function() {
-    //   txtToSpeech("moving right.");
-    //   for (let i = 0; i < mapWidth; i++) {
-    //     (function(i) {
-    //       setTimeout(() => {
-    //         move("right");
-    //       }, 300 * i);
-    //     })(i);
-    //   }
-    // },
-    // "move down": move("down"),
-    // "move down to end": function() {
-    //   txtToSpeech("moving down.");
-    //   for (let i = 0; i < mapHeight; i++) {
-    //     (function(i) {
-    //       setTimeout(() => {
-    //         move("down");
-    //       }, 300 * i);
-    //     })(i);
-    //   }
-    // },
-    // "move left": move("left"),
-    // "move left to end": function() {
-    //   txtToSpeech("moving left.");
-    //   for (let i = 0; i < mapWidth; i++) {
-    //     (function(i) {
-    //       setTimeout(() => {
-    //         move("left");
-    //       }, 300 * i);
-    //     })(i);
-    //   }
-    // },
+    "move up": function() {
+      move("up");
+    },
+    "up end": function() {
+      txtToSpeech("moving up.");
+      for (let i = 0; i < mapHeight; i++) {
+        (function(i) {
+          setTimeout(() => {
+            if (playerPos < mapWidth || wallArr[playerPos - mapWidth] == 5) {
+              return;
+            }
+            move("up");
+          }, 300 * i);
+        })(i);
+      }
+    },
+    "move right": function() {
+      move("right");
+    },
+    "right end": function() {
+      txtToSpeech("moving right.");
+      for (let i = 0; i < mapWidth; i++) {
+        (function(i) {
+          setTimeout(() => {
+            if (
+              (playerPos + 1) % mapWidth === 0 ||
+              wallArr[playerPos + 1] == 5
+            ) {
+              return;
+            }
+            move("right");
+          }, 300 * i);
+        })(i);
+      }
+    },
+    "move down": function() {
+      move("down");
+    },
+    "down end": function() {
+      txtToSpeech("moving down.");
+      for (let i = 0; i < mapHeight; i++) {
+        (function(i) {
+          setTimeout(() => {
+            if (
+              playerPos > lastKey - mapWidth ||
+              wallArr[playerPos + mapWidth] == 5
+            ) {
+              return;
+            }
+            move("down");
+          }, 300 * i);
+        })(i);
+      }
+    },
+    "move left": function() {
+      move("left");
+    },
+    "left end": function() {
+      txtToSpeech("moving left.");
+      for (let i = 0; i < mapWidth; i++) {
+        (function(i) {
+          setTimeout(() => {
+            if (
+              playerPos % mapWidth === 0 ||
+              wallArr[playerPos - 1] == 5
+            ) {
+              return;
+            }
+            move("left");
+          }, 300 * i);
+        })(i);
+      }
+    },
     "new game": function() {
       attackSignal = false;
       isRolled = false;
@@ -845,11 +873,10 @@ function commands() {
         slotC.style.visibility = "visible";
         animateSlot();
         txtToSpeech(`Rolling`);
-        const slotInterval = setInterval(() => {
+        setTimeout(() => {
           if (slotAnimatingDone) {
             txtToSpeech(`You have rolled ${chosenPath}`);
             slotC.style.visibility = "hidden";
-            clearInterval(slotInterval);
             helpPath = getPath();
             const pathInterval = setInterval(() => {
               if (searchFinished) {
@@ -859,7 +886,7 @@ function commands() {
               }
             }, 500);
           }
-        }, 1000);
+        }, 5000);
       } else {
         txtToSpeech(`You have already rolled ${chosenPath}`);
       }
