@@ -1,4 +1,5 @@
-/* global WeightedGraph dijkstra aStar  */
+/* global annyang WeightedGraph dijkstra aStar animatePath */
+const moves = document.getElementById("moves");
 const minMoves = document.getElementById("min-moves");
 const c = document.getElementById("canvas");
 const ctx = c.getContext("2d");
@@ -54,7 +55,7 @@ function initialSettings() {
   slotAnimatingDone = false;
   searchFinished = false;
   minMoves.innerHTML = 0;
-  moves.innerHTML = 0;
+  moves.innerHTML = 1;
   pathSlots = [
     "dijkstra",
     "a star",
@@ -452,9 +453,8 @@ function drawMaze() {
         }
       }
     }
-  }, 500);
+  }, 800);
 }
-const moves = document.getElementById("moves");
 
 // tutorial events
 const tutorials = document.getElementById("tutorials");
@@ -510,11 +510,10 @@ gacha.addEventListener("click", () => {
     slotC.style.visibility = "visible";
     animateSlot();
     txtToSpeech(`Rolling`);
-    const slotInterval = setInterval(() => {
+    setTimeout(() => {
       if (slotAnimatingDone) {
         txtToSpeech(`You have rolled ${chosenPath}`);
         slotC.style.visibility = "hidden";
-        clearInterval(slotInterval);
         helpPath = getPath();
         const pathInterval = setInterval(() => {
           if (searchFinished) {
@@ -523,7 +522,7 @@ gacha.addEventListener("click", () => {
           }
         }, 500);
       }
-    }, 1000);
+    }, 5000);
   } else {
     txtToSpeech(`You have already rolled ${chosenPath}`);
   }
@@ -630,7 +629,9 @@ function animateSlot() {
       offset = 0;
       offsetV = 0;
     }
-    if (offset === 0 && offsetV === 0) slotAnimatingDone = true;
+    if (offset === 0 && offsetV === 0) {
+      slotAnimatingDone = true;
+    }
     requestAnimationFrame(animate);
   }
   animate();
