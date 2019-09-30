@@ -765,7 +765,10 @@ function commands() {
       for (let i = 0; i < mapHeight; i++) {
         (function(i) {
           setTimeout(() => {
-            if (playerPos < mapWidth || wallArr[playerPos - mapWidth] == 5) {
+            if (
+              playerPos < mapWidth ||
+              (wallArr[playerPos - mapWidth] == 5 && !useWeights)
+            ) {
               return;
             }
             move("up");
@@ -783,7 +786,7 @@ function commands() {
           setTimeout(() => {
             if (
               (playerPos + 1) % mapWidth === 0 ||
-              wallArr[playerPos + 1] == 5
+              (wallArr[playerPos + 1] == 5 && !useWeights)
             ) {
               return;
             }
@@ -802,7 +805,7 @@ function commands() {
           setTimeout(() => {
             if (
               playerPos > lastKey - mapWidth ||
-              wallArr[playerPos + mapWidth] == 5
+              (wallArr[playerPos + mapWidth] == 5 && !useWeights)
             ) {
               return;
             }
@@ -821,7 +824,7 @@ function commands() {
           setTimeout(() => {
             if (
               playerPos % mapWidth === 0 ||
-              wallArr[playerPos - 1] == 5
+              (wallArr[playerPos - 1] == 5 && !useWeights)
             ) {
               return;
             }
