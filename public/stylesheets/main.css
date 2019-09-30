@@ -79,6 +79,10 @@ h1 {
   display: none;
 }
 
+#commands {
+  display: none;
+}
+
 .tut-wrapper {
   display: flex;
   flex-direction: column;
@@ -126,4 +130,10 @@ h1 {
 
 .tut-li {
   margin: 10px auto;
+}
+
+#page-wrapper {
+  position: absolute;
+  right: 2%;
+  top: 2%;
 }
