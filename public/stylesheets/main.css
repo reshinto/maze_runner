@@ -46,7 +46,7 @@
   position: absolute;
   background-color: rgba(0, 0, 0, 0.75);
   /* border: 2px solid #cd853f; */
-  width: 70%;
+  width: 55%;
   height: 70%;
   z-index: 3;
   display: flex;
