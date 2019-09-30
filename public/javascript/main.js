@@ -837,6 +837,15 @@ function commands() {
       isRolled = false;
       reset(mazeType, useWeights);
     },
+    "start game": function() {
+      attackSignal = true;
+      const interval = setInterval(() => {
+        if (attackSignal === false) {
+          clearInterval(interval);
+        }
+        startMonstersAttack();
+      }, delay);
+    },
     "help": function() {
       if (!isRolled) {
         getChosenPath();
