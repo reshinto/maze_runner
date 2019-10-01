@@ -5,7 +5,11 @@
 * Dijkstra, A Star, Recursive Backtracker Algorithm
 ## Technologies used
 * HTML5, CSS, Javascript, Canvas, Bootstrap 4, annyang, speech synthesizer
-## Game features
-![Game Options](./public/images/game_options.png)
+## Demo
+![Demo](./public/images/demo.gif)
+## Game options
+![Game Options](./public/images/options.png)
 ## Tutorial
-![Game Options](./public/images/tutorials.png)
+![Tutorial](./public/images/tutorial.png)
+## Voice commands
+![Voice Commands](./public/images/commands.png)
