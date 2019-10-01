@@ -732,7 +732,7 @@ function randomReply() {
 // Text to speech events
 function txtToSpeech(text) {
   const msg = new SpeechSynthesisUtterance(text);
-  msg.lang = "ja-JP";
+  // msg.lang = "ja-JP";
   window.speechSynthesis.speak(msg);
 }
 
@@ -744,7 +744,8 @@ function mazeReplies() {
     "Watch where you are going!",
     "You suck as this!",
     "I hate you!",
-    "ばか!",
+    // "ばか!",
+    "Ba ka!",
     "Stop driving me into the wall!",
     "You should be sent to a driving school!",
   ];
