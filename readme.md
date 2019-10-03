@@ -7,7 +7,6 @@
 * HTML5, CSS, Javascript, Canvas, Bootstrap 4, annyang, speech synthesizer
 ## Demos
 ![Maze](./public/images/mazeDemo.gif)
-![Bombs](./public/images/bombsDemo.gif)
 ![Demo](./public/images/demo.gif)
 ## Game options
 ![Game Options](./public/images/options.png)
